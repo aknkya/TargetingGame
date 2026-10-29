@@ -26,8 +26,3 @@ task dist(type: Jar) {
     with jar
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}

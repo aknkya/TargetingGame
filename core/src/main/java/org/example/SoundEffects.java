@@ -11,14 +11,19 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Procedural Audio Synthesizer for TargetingGame.
- * Generates custom 44.1kHz 16-bit sound effects entirely through code.
+ * Procedural Audio Synthesizer for Sudoku Master.
+ * Generates high-fidelity 44.1kHz 16-bit sound effects in memory.
  */
 public class SoundEffects {
 
-    private Sound launchSound;
-    private Sound impactSound;
-    private Sound resetSound;
+    private Sound placeSound;
+    private Sound pencilSound;
+    private Sound eraseSound;
+    private Sound errorSound;
+    private Sound victorySound;
+    private Sound clickSound;
+    private Sound hoverSound;
+    private boolean soundEnabled = true;
 
     public void init() {
         try {
@@ -27,50 +32,84 @@ public class SoundEffects {
                 dir.mkdirs();
             }
 
-            FileHandle launchFile = Gdx.files.local("sounds/launch.wav");
-            FileHandle impactFile = Gdx.files.local("sounds/impact.wav");
-            FileHandle resetFile = Gdx.files.local("sounds/reset.wav");
+            FileHandle placeFile = Gdx.files.local("sounds/place.wav");
+            FileHandle pencilFile = Gdx.files.local("sounds/pencil.wav");
+            FileHandle eraseFile = Gdx.files.local("sounds/erase.wav");
+            FileHandle errorFile = Gdx.files.local("sounds/error.wav");
+            FileHandle victoryFile = Gdx.files.local("sounds/victory.wav");
+            FileHandle clickFile = Gdx.files.local("sounds/click.wav");
+            FileHandle hoverFile = Gdx.files.local("sounds/hover.wav");
 
-            launchFile.writeBytes(synthesizeLaunchWav(), false);
-            impactFile.writeBytes(synthesizeImpactWav(), false);
-            resetFile.writeBytes(synthesizeResetWav(), false);
+            placeFile.writeBytes(synthesizePlaceWav(), false);
+            pencilFile.writeBytes(synthesizePencilWav(), false);
+            eraseFile.writeBytes(synthesizeEraseWav(), false);
+            errorFile.writeBytes(synthesizeErrorWav(), false);
+            victoryFile.writeBytes(synthesizeVictoryWav(), false);
+            clickFile.writeBytes(synthesizeClickWav(), false);
+            hoverFile.writeBytes(synthesizeHoverWav(), false);
 
-            launchSound = Gdx.audio.newSound(launchFile);
-            impactSound = Gdx.audio.newSound(impactFile);
-            resetSound = Gdx.audio.newSound(resetFile);
+            placeSound = Gdx.audio.newSound(placeFile);
+            pencilSound = Gdx.audio.newSound(pencilFile);
+            eraseSound = Gdx.audio.newSound(eraseFile);
+            errorSound = Gdx.audio.newSound(errorFile);
+            victorySound = Gdx.audio.newSound(victoryFile);
+            clickSound = Gdx.audio.newSound(clickFile);
+            hoverSound = Gdx.audio.newSound(hoverFile);
         } catch (Exception e) {
             Gdx.app.error("SoundEffects", "Error synthesizing audio effects", e);
         }
     }
 
-    public void playLaunch() {
-        if (launchSound != null) {
-            launchSound.play(0.85f, 1.0f, -0.3f); // Pan slightly left where launcher is
-        }
+    public boolean isSoundEnabled() { return soundEnabled; }
+    public void setSoundEnabled(boolean enabled) { this.soundEnabled = enabled; }
+    public void toggleSound() { this.soundEnabled = !this.soundEnabled; }
+
+    public void playPlace() {
+        if (!soundEnabled || placeSound == null) return;
+        placeSound.play(0.85f, 1.0f, 0f);
     }
 
-    public void playImpact(float volume, float pitch, float pan) {
-        if (impactSound != null) {
-            float clampedVol = Math.max(0.15f, Math.min(volume, 1.0f));
-            float clampedPitch = Math.max(0.7f, Math.min(pitch, 1.4f));
-            float clampedPan = Math.max(-1.0f, Math.min(pan, 1.0f));
-            impactSound.play(clampedVol, clampedPitch, clampedPan);
-        }
+    public void playPencil() {
+        if (!soundEnabled || pencilSound == null) return;
+        pencilSound.play(0.55f, 1.15f, 0f);
     }
 
-    public void playReset() {
-        if (resetSound != null) {
-            resetSound.play(0.6f, 1.1f, -0.3f);
-        }
+    public void playErase() {
+        if (!soundEnabled || eraseSound == null) return;
+        eraseSound.play(0.6f, 0.95f, 0f);
+    }
+
+    public void playError() {
+        if (!soundEnabled || errorSound == null) return;
+        errorSound.play(0.75f, 1.0f, 0f);
+    }
+
+    public void playVictory() {
+        if (!soundEnabled || victorySound == null) return;
+        victorySound.play(1.0f, 1.0f, 0f);
+    }
+
+    public void playClick() {
+        if (!soundEnabled || clickSound == null) return;
+        clickSound.play(0.7f, 1.0f, 0f);
+    }
+
+    public void playHover() {
+        if (!soundEnabled || hoverSound == null) return;
+        hoverSound.play(0.35f, 1.0f, 0f);
     }
 
     public void dispose() {
-        if (launchSound != null) launchSound.dispose();
-        if (impactSound != null) impactSound.dispose();
-        if (resetSound != null) resetSound.dispose();
+        if (placeSound != null) placeSound.dispose();
+        if (pencilSound != null) pencilSound.dispose();
+        if (eraseSound != null) eraseSound.dispose();
+        if (errorSound != null) errorSound.dispose();
+        if (victorySound != null) victorySound.dispose();
+        if (clickSound != null) clickSound.dispose();
+        if (hoverSound != null) hoverSound.dispose();
     }
 
-    // --- Procedural WAV Generation ---
+    // --- Procedural Audio Synthesizers ---
 
     private static byte[] buildWav(short[] pcmSamples, int sampleRate) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -79,22 +118,17 @@ public class SoundEffects {
         int totalAudioLen = pcmSamples.length * 2;
         int totalDataLen = totalAudioLen + 36;
 
-        // RIFF header
         dos.writeBytes("RIFF");
         dos.writeInt(Integer.reverseBytes(totalDataLen));
         dos.writeBytes("WAVE");
-
-        // Format chunk
         dos.writeBytes("fmt ");
-        dos.writeInt(Integer.reverseBytes(16)); // Chunk size
-        dos.writeShort(Short.reverseBytes((short) 1)); // Audio format (PCM)
-        dos.writeShort(Short.reverseBytes((short) 1)); // Channels (1 = Mono)
-        dos.writeInt(Integer.reverseBytes(sampleRate)); // Sample rate
-        dos.writeInt(Integer.reverseBytes(sampleRate * 2)); // Byte rate
-        dos.writeShort(Short.reverseBytes((short) 2)); // Block align
-        dos.writeShort(Short.reverseBytes((short) 16)); // Bits per sample
-
-        // Data chunk
+        dos.writeInt(Integer.reverseBytes(16));
+        dos.writeShort(Short.reverseBytes((short) 1));
+        dos.writeShort(Short.reverseBytes((short) 1));
+        dos.writeInt(Integer.reverseBytes(sampleRate));
+        dos.writeInt(Integer.reverseBytes(sampleRate * 2));
+        dos.writeShort(Short.reverseBytes((short) 2));
+        dos.writeShort(Short.reverseBytes((short) 16));
         dos.writeBytes("data");
         dos.writeInt(Integer.reverseBytes(totalAudioLen));
 
@@ -103,94 +137,140 @@ public class SoundEffects {
             buffer.putShort(sample);
         }
         dos.write(buffer.array());
-
         dos.flush();
         return baos.toByteArray();
     }
 
     /**
-     * Synthesizes an energetic 'Whoosh / Launch' slingshot sound.
+     * Tactile number placement pop (pleasant clean marimba chime).
      */
-    private static byte[] synthesizeLaunchWav() throws IOException {
+    private static byte[] synthesizePlaceWav() throws IOException {
         int sampleRate = 44100;
-        float duration = 0.28f;
+        float duration = 0.12f;
         int totalSamples = (int) (sampleRate * duration);
         short[] samples = new short[totalSamples];
 
         for (int i = 0; i < totalSamples; i++) {
             float t = (float) i / sampleRate;
-            float progress = (float) i / totalSamples;
-
-            // Pitch sweeps upwards from 140Hz to 480Hz
-            float freq = 140f + 340f * (float) Math.pow(progress, 1.5);
-            float sine = (float) Math.sin(2.0 * Math.PI * freq * t);
-
-            // Add slight air noise
-            float noise = (float) (Math.random() * 2.0 - 1.0) * 0.25f;
-
-            // Amplitude envelope (fast rise, smooth fade out)
-            float envelope = (float) (Math.sin(progress * Math.PI));
-
-            float sampleVal = (sine * 0.75f + noise * 0.25f) * envelope * 24000f;
-            samples[i] = (short) Math.max(-32767, Math.min(32767, sampleVal));
+            float freq1 = 523.25f; // C5
+            float freq2 = 1046.5f; // C6 overtone
+            float env = (float) Math.exp(-t * 32.0);
+            float wave = (float) (Math.sin(2.0 * Math.PI * freq1 * t) * 0.7 +
+                                  Math.sin(2.0 * Math.PI * freq2 * t) * 0.3);
+            samples[i] = (short) (wave * env * 24000);
         }
-
         return buildWav(samples, sampleRate);
     }
 
     /**
-     * Synthesizes a punchy, heavy 'Thud / Impact' wooden-stone collision sound.
+     * Subtle, high-frequency pencil note tick.
      */
-    private static byte[] synthesizeImpactWav() throws IOException {
+    private static byte[] synthesizePencilWav() throws IOException {
         int sampleRate = 44100;
-        float duration = 0.32f;
+        float duration = 0.04f;
         int totalSamples = (int) (sampleRate * duration);
         short[] samples = new short[totalSamples];
 
         for (int i = 0; i < totalSamples; i++) {
             float t = (float) i / sampleRate;
-            float progress = (float) i / totalSamples;
-
-            // Low frequency punch (starts at 180Hz and rapidly drops to 45Hz)
-            float freq = 45f + 135f * (float) Math.exp(-progress * 14.0);
-            float bass = (float) Math.sin(2.0 * Math.PI * freq * t);
-
-            // Crunchy wood splinter crackle noise at the impact onset
-            float crackle = (progress < 0.2f) ? (float) (Math.random() * 2.0 - 1.0) * 0.5f : 0f;
-
-            // Exponential decay envelope
-            float envelope = (float) Math.exp(-progress * 9.0);
-
-            float sampleVal = (bass * 0.75f + crackle * 0.25f) * envelope * 29000f;
-            samples[i] = (short) Math.max(-32767, Math.min(32767, sampleVal));
+            float freq = 1480f - (t / duration) * 400f;
+            float env = (float) Math.exp(-t * 95.0);
+            float wave = (float) Math.sin(2.0 * Math.PI * freq * t);
+            samples[i] = (short) (wave * env * 18000);
         }
-
         return buildWav(samples, sampleRate);
     }
 
     /**
-     * Synthesizes a subtle, pleasant 'Pop / Reset' sound.
+     * Subtle whoosh for erase.
      */
-    private static byte[] synthesizeResetWav() throws IOException {
+    private static byte[] synthesizeEraseWav() throws IOException {
         int sampleRate = 44100;
-        float duration = 0.16f;
+        float duration = 0.10f;
         int totalSamples = (int) (sampleRate * duration);
         short[] samples = new short[totalSamples];
 
         for (int i = 0; i < totalSamples; i++) {
             float t = (float) i / sampleRate;
-            float progress = (float) i / totalSamples;
-
-            // Tone drops slightly from 600Hz to 400Hz
-            float freq = 400f + 200f * (1.0f - progress);
-            float sine = (float) Math.sin(2.0 * Math.PI * freq * t);
-
-            float envelope = (float) Math.exp(-progress * 15.0);
-
-            float sampleVal = sine * envelope * 18000f;
-            samples[i] = (short) Math.max(-32767, Math.min(32767, sampleVal));
+            float noise = (float) (Math.random() * 2.0 - 1.0);
+            float env = (float) (Math.sin(Math.PI * (t / duration)) * Math.exp(-t * 15.0));
+            samples[i] = (short) (noise * env * 14000);
         }
+        return buildWav(samples, sampleRate);
+    }
 
+    /**
+     * Soft warning buzz for sudoku conflict/mistake.
+     */
+    private static byte[] synthesizeErrorWav() throws IOException {
+        int sampleRate = 44100;
+        float duration = 0.22f;
+        int totalSamples = (int) (sampleRate * duration);
+        short[] samples = new short[totalSamples];
+
+        for (int i = 0; i < totalSamples; i++) {
+            float t = (float) i / sampleRate;
+            float freq = 150f;
+            float env = (float) Math.exp(-t * 12.0);
+            // Square-ish wave for buzz
+            float wave = Math.sin(2.0 * Math.PI * freq * t) > 0 ? 0.6f : -0.6f;
+            samples[i] = (short) (wave * env * 18000);
+        }
+        return buildWav(samples, sampleRate);
+    }
+
+    /**
+     * Arpeggio victory celebration fanfare.
+     */
+    private static byte[] synthesizeVictoryWav() throws IOException {
+        int sampleRate = 44100;
+        float duration = 0.65f;
+        int totalSamples = (int) (sampleRate * duration);
+        short[] samples = new short[totalSamples];
+
+        float[] freqs = { 523.25f, 659.25f, 783.99f, 1046.50f }; // C5, E5, G5, C6
+        float noteDur = 0.14f;
+
+        for (int i = 0; i < totalSamples; i++) {
+            float t = (float) i / sampleRate;
+            int noteIdx = Math.min(freqs.length - 1, (int) (t / noteDur));
+            float noteT = t - (noteIdx * noteDur);
+            float env = (float) Math.exp(-noteT * 10.0);
+            float wave = (float) Math.sin(2.0 * Math.PI * freqs[noteIdx] * t);
+            samples[i] = (short) (wave * env * 22000);
+        }
+        return buildWav(samples, sampleRate);
+    }
+
+    private static byte[] synthesizeClickWav() throws IOException {
+        int sampleRate = 44100;
+        float duration = 0.05f;
+        int totalSamples = (int) (sampleRate * duration);
+        short[] samples = new short[totalSamples];
+
+        for (int i = 0; i < totalSamples; i++) {
+            float t = (float) i / sampleRate;
+            float freq = 850f - (t / duration) * 450f;
+            float env = (float) Math.exp(-t * 90.0);
+            float wave = (float) Math.sin(2.0 * Math.PI * freq * t);
+            samples[i] = (short) (wave * env * 22000);
+        }
+        return buildWav(samples, sampleRate);
+    }
+
+    private static byte[] synthesizeHoverWav() throws IOException {
+        int sampleRate = 44100;
+        float duration = 0.02f;
+        int totalSamples = (int) (sampleRate * duration);
+        short[] samples = new short[totalSamples];
+
+        for (int i = 0; i < totalSamples; i++) {
+            float t = (float) i / sampleRate;
+            float freq = 1200f;
+            float env = (float) Math.exp(-t * 220.0);
+            float wave = (float) Math.sin(2.0 * Math.PI * freq * t);
+            samples[i] = (short) (wave * env * 11000);
+        }
         return buildWav(samples, sampleRate);
     }
 }
