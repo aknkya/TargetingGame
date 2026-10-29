@@ -1,0 +1,78 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+allprojects {
+    version = '1.0.0'
+    ext {
+        appName = "TargetingGame"
+        gdxVersion = '1.13.1'
+        box2dlightsVersion = '1.5'
+        shapeDrawerVersion = '2.6.0'
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+    }
+}
+
+project(":core") {
+    apply plugin: "java-library"
+
+    dependencies {
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+        api "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion"
+        api "space.earlygrey:shapedrawer:$shapeDrawerVersion"
+    }
+}
+
+project(":desktop") {
+    apply plugin: "java-library"
+    apply plugin: "application"
+
+    mainClassName = "org.example.DesktopLauncher"
+
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+        api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+    }
+}
+
+project(":android") {
+    apply plugin: "com.android.application"
+
+    configurations { natives }
+
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
+
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64"
+
+        natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-arm64-v8a"
+        natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
+        natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86_64"
+    }
+}

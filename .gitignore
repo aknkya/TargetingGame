@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Android
+local.properties
+android/libs/
+*.apk
+*.ap_
+*.dex
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Maven (legacy)
+target/
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# In-game runtime generated files
+sounds/
