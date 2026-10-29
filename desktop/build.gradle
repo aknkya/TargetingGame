@@ -4,21 +4,20 @@ targetCompatibility = 17
 sourceSets.main.java.srcDirs = [ "src/main/java" ]
 sourceSets.main.resources.srcDirs = [ "../assets" ]
 
-project.ext.mainClassName = "org.example.DesktopLauncher"
-project.ext.assetsDir = new File("../assets")
+application {
+    mainClass = "org.example.DesktopLauncher"
+}
 
-task run(dependsOn: classes, type: JavaExec) {
-    mainClass = project.mainClassName
-    classpath = sourceSets.main.runtimeClasspath
+run {
     standardInput = System.in
-    workingDir = project.assetsDir
+    workingDir = file("../assets")
     ignoreExitValue = true
 }
 
 task dist(type: Jar) {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
-        attributes 'Main-Class': project.mainClassName
+        attributes 'Main-Class': "org.example.DesktopLauncher"
     }
     dependsOn configurations.runtimeClasspath
     from {

@@ -41,8 +41,6 @@ project(":desktop") {
     apply plugin: "java-library"
     apply plugin: "application"
 
-    mainClassName = "org.example.DesktopLauncher"
-
     dependencies {
         implementation project(":core")
         api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
