@@ -15,6 +15,7 @@ run {
 }
 
 task dist(type: Jar) {
+    archiveFileName = "SudokuMaster.jar"
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
         attributes 'Main-Class': "org.example.DesktopLauncher"
@@ -25,4 +26,3 @@ task dist(type: Jar) {
     }
     with jar
 }
-

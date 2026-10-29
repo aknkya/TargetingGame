@@ -46,12 +46,20 @@ A modern, high-performance 9x9 Sudoku game built with **Java 21** and the **LibG
 
 ---
 
-## 🚀 How to Run & Build
+## 🚀 How to Run & Download Builds
 
-### 💻 Desktop (Windows / Mac / Linux)
-- **Option 1**: Double-click `run.bat` (Windows).
-- **Option 2**: Run `./gradlew desktop:run` in terminal.
-- **Option 3**: In IntelliJ IDEA, select **DesktopLauncher** from the top Run dropdown and click **Run ▶**.
+### 📦 Automatic Builds from GitHub Actions
+Whenever code is pushed, GitHub Actions automatically builds and uploads release packages:
+1. Go to the [GitHub Actions tab](https://github.com/aknkya/TargetingGame/actions).
+2. Click on the latest workflow run.
+3. Under **Artifacts** at the bottom, download:
+   - **`SudokuMaster-Android-APK`**: Installable `.apk` for Android devices.
+   - **`SudokuMaster-macOS-App`**: Self-contained native macOS `.app` bundle (no Java installation required, includes Apple Silicon & Intel support).
+   - **`SudokuMaster-Universal-Desktop-JAR`**: Cross-platform executable `.jar` for Windows, macOS, and Linux.
 
-### 📱 Android APK
-Run `./gradlew android:assembleDebug` or trigger the GitHub Actions workflow to build the APK.
+---
+
+### 💻 Running Locally (Development)
+- **Windows**: Double-click [run.bat](run.bat) or run `.\gradlew desktop:run`.
+- **macOS / Linux**: Run `./gradlew desktop:run`.
+- **IntelliJ IDEA**: Select **DesktopLauncher** from the top Run configurations dropdown and click **Run ▶**.

@@ -5,6 +5,8 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 
 public class DesktopLauncher {
     public static void main(String[] arg) {
+        if (StartupHelper.startNewJvmIfRequired()) return;
+
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setForegroundFPS(60);
         config.setTitle("Sudoku Master - Modern Glass Edition");
