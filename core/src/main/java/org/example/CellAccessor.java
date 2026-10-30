@@ -3,8 +3,8 @@ package org.example;
 import aurelienribon.tweenengine.TweenAccessor;
 
 /**
- * Universal Tween Engine için Cell sınıfına özel TweenAccessor.
- * Hücre ölçekleme, sallanma (shake), seçim rengi ve hata mürekkebi geçişlerini yönetir.
+ * Universal Tween Engine TweenAccessor for the Cell class.
+ * Handles cell scaling, shake animations, selection paper tinting, and error ink transitions.
  */
 public class CellAccessor implements TweenAccessor<Cell> {
 

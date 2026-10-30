@@ -1,20 +1,20 @@
 package org.example;
 
 /**
- * Sudoku ızgarasındaki her bir hücrenin görsel ve animasyon durumunu tutan sınıf.
- * Universal Tween Engine (CellAccessor) tarafından animasyon değerleri güncellenir.
+ * Model representing the visual and animation state of an individual cell on the Sudoku board.
+ * Animation properties are interpolated by Universal Tween Engine via CellAccessor.
  */
 public class Cell {
     public final int row;
     public final int col;
 
-    // Animasyon durum değişkenleri
+    // Animation state properties
     private float scale = 1.0f;
     private float offsetX = 0.0f;
     private float offsetY = 0.0f;
-    private float selectHighlight = 0.0f; // 0.0f (seçili değil) -> 1.0f (seçili kâğıt vurgusu)
-    private float errorHighlight = 0.0f;  // 0.0f -> 1.0f (kırmızı mürekkep geçişi)
-    private float popScale = 1.0f;        // Sayı yazıldığında kalem vuruşu yumuşak pop efekti
+    private float selectHighlight = 0.0f; // 0.0f (unselected) -> 1.0f (selected paper wash)
+    private float errorHighlight = 0.0f;  // 0.0f -> 1.0f (red ink transition)
+    private float popScale = 1.0f;        // Soft pop scale effect when placing a digit
 
     public Cell(int row, int col) {
         this.row = row;

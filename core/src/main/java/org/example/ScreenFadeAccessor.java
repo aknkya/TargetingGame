@@ -3,8 +3,8 @@ package org.example;
 import aurelienribon.tweenengine.TweenAccessor;
 
 /**
- * Universal Tween Engine için ScreenFade sınıfına ait TweenAccessor.
- * Ekranlar arası geçişlerde yumuşak alfa (fade) değişimlerini yönetir.
+ * Universal Tween Engine TweenAccessor for the ScreenFade class.
+ * Interpolates alpha values for smooth fade transitions between screens.
  */
 public class ScreenFadeAccessor implements TweenAccessor<ScreenFade> {
 

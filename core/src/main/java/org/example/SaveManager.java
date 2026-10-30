@@ -4,14 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 
 /**
- * Oyun ilerlemesi, kullanıcı ayarları ve istatistiklerin LibGDX Preferences
- * ile kalıcı olarak saklanmasını sağlayan merkezi yönetici sınıfı.
+ * Central manager class handling persistent game progress, user settings,
+ * and player statistics using LibGDX Preferences.
  */
 public class SaveManager {
 
     private static final String PREFS_NAME = "SudokuMasterPaperPreferences";
 
-    // İlerleme Anahtarları
+    // Progress Keys
     private static final String KEY_HAS_SAVED = "game_has_saved";
     private static final String KEY_BOARD = "game_board";
     private static final String KEY_INITIAL = "game_initial";
@@ -21,12 +21,12 @@ public class SaveManager {
     private static final String KEY_DIFFICULTY = "game_difficulty";
     private static final String KEY_MISTAKES = "game_mistakes";
 
-    // İstatistik Anahtarları
+    // Statistics Keys
     private static final String KEY_STATS_COMPLETED = "stats_games_completed";
     private static final String KEY_STATS_TOTAL_TIME = "stats_total_play_time";
     private static final String KEY_STATS_BEST_PREFIX = "stats_best_time_";
 
-    // Ayar Anahtarları
+    // Settings Keys
     private static final String KEY_SETTING_SOUND = "setting_sound_enabled";
     private static final String KEY_SETTING_LIGHT = "setting_light_enabled";
 
@@ -37,11 +37,11 @@ public class SaveManager {
     }
 
     // ==========================================
-    // 1. OYUN İLERLEMESİ KAYIT & DEVAM ET
+    // 1. GAME PROGRESS: SAVE & RESUME
     // ==========================================
 
     /**
-     * Aktif oyunun tüm tahta verilerini, notlarını ve süresini kaydeder.
+     * Saves the current board state, initial clues, solution, notes, time, and mistakes.
      */
     public void saveGame(SudokuEngine engine) {
         if (engine == null || engine.isCompleted() || engine.isGameOver()) {
@@ -60,7 +60,7 @@ public class SaveManager {
                 initialSb.append(engine.getInitialCell(r, c)).append(",");
                 solutionSb.append(engine.getSolutionCell(r, c)).append(",");
 
-                // Her hücredeki 9 olası notu bitmask olarak kompakt sakla
+                // Store 9 candidate notes as a compact bitmask per cell
                 int mask = 0;
                 for (int d = 1; d <= 9; d++) {
                     if (engine.hasNote(r, c, d)) {
@@ -83,8 +83,8 @@ public class SaveManager {
     }
 
     /**
-     * Kayıtlı oyun varsa motor içine aktararak oyunu geri yükler.
-     * @return Yükleme başarılıysa true, kayıt yoksa false döner.
+     * Loads and restores a previously saved game into the engine if available.
+     * @return true if restored successfully, false otherwise.
      */
     public boolean loadGame(SudokuEngine engine) {
         if (!hasSavedGame() || engine == null) return false;
@@ -138,21 +138,21 @@ public class SaveManager {
             engine.restoreGame(diff, board, initial, solution, notes, time, mistakes);
             return true;
         } catch (Exception e) {
-            Gdx.app.error("SaveManager", "Kayıtlı oyun yüklenirken hata oluştu: " + e.getMessage());
+            Gdx.app.error("SaveManager", "Error restoring saved game: " + e.getMessage());
             clearSavedGame();
             return false;
         }
     }
 
     /**
-     * Devam edilebilir bir oyun kaydının var olup olmadığını kontrol eder.
+     * Checks if a resumable saved game exists.
      */
     public boolean hasSavedGame() {
         return prefs.getBoolean(KEY_HAS_SAVED, false);
     }
 
     /**
-     * Mevcut oyun kaydını temizler.
+     * Clears all saved progress data.
      */
     public void clearSavedGame() {
         prefs.putBoolean(KEY_HAS_SAVED, false);
@@ -167,32 +167,32 @@ public class SaveManager {
     }
 
     // ==========================================
-    // 2. İSTATİSTİK YÖNETİMİ
+    // 2. PLAYER STATISTICS
     // ==========================================
 
     /**
-     * Tamamlanan oyun sayısını döndürür.
+     * Returns total number of successfully completed games.
      */
     public int getGamesCompleted() {
         return prefs.getInteger(KEY_STATS_COMPLETED, 0);
     }
 
     /**
-     * Zorluk seviyesine göre en iyi süreyi saniye cinsinden döndürür (0 ise henüz rekor yok).
+     * Returns the best completion time in seconds for a given difficulty (0 if no record).
      */
     public float getBestTime(SudokuEngine.Difficulty diff) {
         return prefs.getFloat(KEY_STATS_BEST_PREFIX + diff.name(), 0f);
     }
 
     /**
-     * Toplam oyun oynama süresini saniye cinsinden döndürür.
+     * Returns the total gameplay time across all sessions in seconds.
      */
     public float getTotalPlayTime() {
         return prefs.getFloat(KEY_STATS_TOTAL_TIME, 0f);
     }
 
     /**
-     * Bir oyun başarıyla tamamlandığında istatistikleri günceller.
+     * Updates statistics upon completing a game.
      */
     public void recordGameCompleted(SudokuEngine.Difficulty diff, float time) {
         int count = getGamesCompleted() + 1;
@@ -209,7 +209,7 @@ public class SaveManager {
     }
 
     /**
-     * Toplam oyun süresine ekleme yapar.
+     * Adds elapsed time to total cumulative play time.
      */
     public void addTotalPlayTime(float seconds) {
         float current = getTotalPlayTime() + seconds;
@@ -218,18 +218,18 @@ public class SaveManager {
     }
 
     // ==========================================
-    // 3. KULLANICI AYARLARI
+    // 3. USER SETTINGS
     // ==========================================
 
     /**
-     * Ses efektlerinin açık olup olmadığını döndürür (varsayılan: açık).
+     * Returns whether sound effects are enabled (default: true).
      */
     public boolean isSoundEnabled() {
         return prefs.getBoolean(KEY_SETTING_SOUND, true);
     }
 
     /**
-     * Ses efektleri ayarını kaydeder.
+     * Sets and saves the sound enabled preference.
      */
     public void setSoundEnabled(boolean enabled) {
         prefs.putBoolean(KEY_SETTING_SOUND, enabled);
@@ -237,14 +237,14 @@ public class SaveManager {
     }
 
     /**
-     * Masa lambası ışık efektinin açık olup olmadığını döndürür (varsayılan: açık).
+     * Returns whether the desk lamp lighting effect is enabled (default: true).
      */
     public boolean isLightEnabled() {
         return prefs.getBoolean(KEY_SETTING_LIGHT, true);
     }
 
     /**
-     * Masa lambası ışık efekti ayarını kaydeder.
+     * Sets and saves the desk lamp lighting preference.
      */
     public void setLightEnabled(boolean enabled) {
         prefs.putBoolean(KEY_SETTING_LIGHT, enabled);
@@ -252,11 +252,11 @@ public class SaveManager {
     }
 
     // ==========================================
-    // 4. YARDIMCI BİÇİMLENDİRME METOTLARI
+    // 4. TIME FORMATTING UTILITIES
     // ==========================================
 
     /**
-     * Saniyeyi MM:SS formatına dönüştürür.
+     * Formats seconds into MM:SS format.
      */
     public static String formatTime(float seconds) {
         if (seconds <= 0f) return "--:--";
@@ -267,18 +267,18 @@ public class SaveManager {
     }
 
     /**
-     * Saniyeyi saat ve dakika formatına (ör. 1s 24dk veya 45dk 12sn) dönüştürür.
+     * Formats seconds into hours/minutes or minutes/seconds format (e.g. 1h 24m or 45m 12s).
      */
     public static String formatTotalTime(float seconds) {
-        if (seconds <= 0f) return "0 dk";
+        if (seconds <= 0f) return "0m";
         int totalSec = (int) seconds;
         int h = totalSec / 3600;
         int m = (totalSec % 3600) / 60;
         int s = totalSec % 60;
         if (h > 0) {
-            return String.format("%ds %02ddk", h, m);
+            return String.format("%dh %02dm", h, m);
         } else {
-            return String.format("%02ddk %02dsn", m, s);
+            return String.format("%02dm %02ds", m, s);
         }
     }
 }

@@ -1,7 +1,7 @@
 package org.example;
 
 /**
- * Ekranlar arası yumuşak fade (kararma / açılma) animasyonunu tutan model sınıfı.
+ * Model representing screen transition fade alpha for smooth visual state changes.
  */
 public class ScreenFade {
     private float alpha = 0.0f;

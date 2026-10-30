@@ -50,16 +50,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sudoku Master - Paper Edition (Kâğıt & Kalem Teması)
- * Krem/kırık beyaz zemin, ince kalem çizgisi kenarlıklar, yumuşak gölgeler ve el yazısı hissi.
- * Universal Tween Engine, Preferences (SaveManager), Scene2D Menü & Ayarlar,
- * Sıcak Masa Lambası Box2DLights ve Android dokunmatik desteğiyle güçlendirilmiştir.
+ * Sudoku Master - Paper Edition
+ * Features a tactile paper aesthetic: warm cream parchment background, fine graphite pencil borders,
+ * soft drop shadows, and handwriting typography.
+ * Powered by Universal Tween Engine, Preferences (SaveManager), Scene2D Menu & Settings,
+ * Warm Desk Lamp Box2DLights, and cross-platform Android/Desktop touch controls.
  */
 public class TargetingGame extends ApplicationAdapter {
 
     public static final float SCREEN_WIDTH = 1280f;
     public static final float SCREEN_HEIGHT = 720f;
-    public static final float PPM = 32f; // Box2D için Piksel/Metre oranı
+    public static final float PPM = 32f; // Box2D Pixels Per Meter ratio
 
     public enum GameState {
         MAIN_MENU,
@@ -72,7 +73,7 @@ public class TargetingGame extends ApplicationAdapter {
         GAME_OVER
     }
 
-    // Durum ve Yöneticiler
+    // State & Managers
     private GameState state = GameState.MAIN_MENU;
     private GameState stateBeforeSettings = GameState.MAIN_MENU;
     private SaveManager saveManager;
@@ -85,7 +86,7 @@ public class TargetingGame extends ApplicationAdapter {
     private final ScreenFade screenFade = new ScreenFade();
     private boolean isTransitioning = false;
 
-    // Çizim ve Kamera
+    // Rendering & Camera
     private OrthographicCamera camera;
     private OrthographicCamera box2dCamera;
     private Viewport viewport;
@@ -94,7 +95,7 @@ public class TargetingGame extends ApplicationAdapter {
     private Texture pixelTexture;
     private final GlyphLayout layout = new GlyphLayout();
 
-    // Scene2D Arayüz (Menü, Ayarlar, İstatistikler)
+    // Scene2D UI (Menu, Settings, Statistics)
     private Stage stage;
     private PaperSkinHelper paperSkinHelper;
     private Skin skin;
@@ -111,29 +112,29 @@ public class TargetingGame extends ApplicationAdapter {
     private Label totalGamesLabel;
     private Label totalPlayTimeLabel;
 
-    // Box2D ve Pastel Kâğıt Konfetisi
+    // Box2D & Pastel Paper Confetti
     private World world;
     private Body groundBody;
     private final Array<Body> confettiBodies = new Array<>();
     private final List<Color> confettiColors = new ArrayList<>();
     private final List<Vector2> confettiSizes = new ArrayList<>();
 
-    // Box2DLights (Sıcak Masa Lambası Efekti)
+    // Box2DLights (Warm Desk Lamp Effect)
     private RayHandler rayHandler;
     private PointLight cursorLight;
     private PointLight boardAmbientLight;
 
-    // Izgara Ölçüleri
+    // Board Dimensions
     private final float boardSize = 540f;
     private final float cellSize = boardSize / 9f; // 60px
     private final float boardX = 130f;
     private final float boardY = 85f;
 
-    // Seçili Hücre
+    // Selected Cell
     private int selectedRow = 4;
     private int selectedCol = 4;
 
-    // Yazı Tipleri (Kâğıt Teması)
+    // Typography (Paper Theme)
     private BitmapFont titleFont;
     private BitmapFont headerFont;
     private BitmapFont clueDigitFont;
@@ -142,7 +143,7 @@ public class TargetingGame extends ApplicationAdapter {
     private BitmapFont buttonFont;
     private BitmapFont smallFont;
 
-    // Oyun İçi Etkileşim Butonları (HUD & NumPad)
+    // Interactive UI Elements (HUD & NumPad)
     public static class UIElement {
         public float x, y, width, height;
         public String text;
@@ -213,7 +214,7 @@ public class TargetingGame extends ApplicationAdapter {
 
     @Override
     public void create() {
-        // 1. Kamera ve Viewport Kurulumu (FitViewport ile farklı ekran oranlarında kararlı ölçekleme)
+        // 1. Camera & Viewport Setup (FitViewport ensures stable scaling across aspect ratios)
         camera = new OrthographicCamera();
         viewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
         viewport.apply();
@@ -225,56 +226,56 @@ public class TargetingGame extends ApplicationAdapter {
 
         batch = new SpriteBatch();
 
-        // 2. Kayıt Sistemi & Ses Yönetimi
+        // 2. Save System & Audio Management
         saveManager = new SaveManager();
         sfx = new SoundEffects();
         sfx.init();
-        sfx.setPaperTheme(true); // Kesinlikle KÂĞIT teması
+        sfx.setPaperTheme(true); // Authentic paper stationery audio
         if (!saveManager.isSoundEnabled()) {
             sfx.toggleSound();
         }
 
-        // 3. Sudoku Motoru & Tahta Durumu
+        // 3. Sudoku Engine & Board State
         sudoku = new SudokuEngine();
 
-        // 4. Universal Tween Engine Kurulumu & Kaydı
+        // 4. Universal Tween Engine Initialization & Registration
         tweenManager = new TweenManager();
         Tween.registerAccessor(Cell.class, new CellAccessor());
         Tween.registerAccessor(ScreenFade.class, new ScreenFadeAccessor());
 
-        // 9x9 Hücre Modellerini Oluştur
+        // Initialize 9x9 Cell animation models
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 cells[r][c] = new Cell(r, c);
             }
         }
-        // Başlangıç hücresini seç
+        // Select initial center cell
         cells[selectedRow][selectedCol].setSelectHighlight(1.0f);
         cells[selectedRow][selectedCol].setScale(1.04f);
 
-        // 5. Çizim, Yazı Tipleri ve Fizik / Işık Sistemi
+        // 5. Drawing Tools, Fonts, Physics & Lighting
         initShapeDrawer();
         initFonts();
         initBox2D();
         initLighting();
 
-        // 6. Scene2D Sahnesi ve Kâğıt Temalı Skin
+        // 6. Scene2D Stage and Paper Theme Skin
         stage = new Stage(viewport, batch);
         paperSkinHelper = new PaperSkinHelper();
         skin = paperSkinHelper.createPaperSkin();
         buildScene2DUI();
 
-        // 7. Oyun İçi HUD ve NumPad Butonları
+        // 7. In-game HUD and NumPad Buttons
         buildGameUI();
 
-        // 8. Girdi İşleyicisi (InputMultiplexer ile Scene2D + Dokunmatik/Fare Hibrit Desteği)
+        // 8. Input Multiplexer (Combines Scene2D + Game Touch/Mouse Input)
         setupInput();
 
-        Gdx.graphics.setTitle("Sudoku Master - Kâğıt Edisyonu");
+        Gdx.graphics.setTitle("Sudoku Master - Paper Edition");
     }
 
     /**
-     * ShapeDrawer için 1x1 beyaz piksel dokusu üretir.
+     * Initializes 1x1 white pixel texture for ShapeDrawer.
      */
     private void initShapeDrawer() {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -288,9 +289,9 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Kâğıt teması için FreeType fontlarını yükler.
-     * Başlangıç ipuçları gazete/baskı stili (36pt), kullanıcının eklediği sayılar ise
-     * dolgun ve net el yazısı stiliyle (40pt) oluşturulur.
+     * Loads FreeType fonts for the paper theme.
+     * Initial clues have printed book/newsprint typography (36pt), while player-entered digits
+     * have authentic, bold handwriting ink styling (40pt).
      */
     private void initFonts() {
         disposeFonts();
@@ -313,11 +314,11 @@ public class TargetingGame extends ApplicationAdapter {
             param.size = 22;
             headerFont = segoeGen.generateFont(param);
 
-            // Başlangıç ipucu sayıları (Kitap / Gazete baskı hissi - 36pt)
+            // Initial clue digits (Book / Newsprint typeface - 36pt)
             param.size = 36;
             clueDigitFont = segoeGen.generateFont(param);
 
-            // Kurşun kalem notları (Net ve rahat okunan 15pt)
+            // Graphite pencil notes (Crisp and legible - 15pt)
             param.size = 15;
             noteFont = segoeGen.generateFont(param);
 
@@ -328,7 +329,7 @@ public class TargetingGame extends ApplicationAdapter {
             smallFont = segoeGen.generateFont(param);
             segoeGen.dispose();
 
-            // Kullanıcının eklediği yeni sayılar (Otantik El Yazısı / Dolgun Kalem Mürekkebi - 40pt)
+            // Player-entered digits (Authentic handwriting / bold ink pen - 40pt)
             FreeTypeFontGenerator handGen = new FreeTypeFontGenerator(handHandle);
             param.size = 40;
             playerDigitFont = handGen.generateFont(param);
@@ -355,7 +356,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Zafer kutlaması için Box2D zemin gövdesi.
+     * Initializes Box2D ground body for victory paper confetti simulation.
      */
     private void initBox2D() {
         world = new World(new Vector2(0, -22f), true);
@@ -372,31 +373,31 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Box2DLights: Sıcak Masa Lambası Efekti (Neon değil, yumuşak sarı/amber masa lambası).
+     * Box2DLights: Warm Desk Lamp Lighting (Soft, cozy amber/yellow desk lamp).
      */
     private void initLighting() {
         RayHandler.useDiffuseLight(true);
         rayHandler = new RayHandler(world);
         rayHandler.setBlurNum(2);
 
-        // Kâğıt yüzeyine düşen sıcak gün ışığı / oda aydınlatması
+        // Soft ambient room lighting falling upon parchment surface
         rayHandler.setAmbientLight(0.96f, 0.94f, 0.90f, 0.92f);
 
-        // Sıcak sarı / amber tonlu masa lambası ışığı (Soft light)
+        // Warm yellow / amber desk lamp light (soft light)
         Color lampColor = new Color(1.0f, 0.94f, 0.82f, 0.32f);
         cursorLight = new PointLight(rayHandler, 64, lampColor, 12.0f, SCREEN_WIDTH / 2f / PPM, SCREEN_HEIGHT / 2f / PPM);
         cursorLight.setSoft(true);
         cursorLight.setSoftnessLength(2.5f);
         cursorLight.setActive(saveManager.isLightEnabled());
 
-        // Tahta üzerine yumuşak odak ışığı
+        // Ambient desk light softly illuminating the board
         boardAmbientLight = new PointLight(rayHandler, 64, new Color(1.0f, 0.97f, 0.90f, 0.16f), 18f,
                 (boardX + boardSize / 2f) / PPM, (boardY + boardSize / 2f) / PPM);
         boardAmbientLight.setSoft(true);
     }
 
     /**
-     * Zafer Konfetisi: Kâğıt parçacıkları / küçük mat origami kareleri (pastel tonlar).
+     * Victory Confetti: Fluttering paper slips & origami squares with matte pastel tones.
      */
     private void triggerVictoryCelebration() {
         for (Body b : confettiBodies) {
@@ -406,14 +407,14 @@ public class TargetingGame extends ApplicationAdapter {
         confettiColors.clear();
         confettiSizes.clear();
 
-        // Pastel ve mat kâğıt renk paleti
+        // Matte pastel stationery color palette
         Color[] paperPalette = new Color[] {
-                new Color(0.92f, 0.82f, 0.72f, 1.0f), // Saman / Kraft Kâğıdı
-                new Color(0.72f, 0.82f, 0.90f, 1.0f), // Pastel Gök Mavisi
-                new Color(0.92f, 0.75f, 0.78f, 1.0f), // Pastel Pudra Gül
-                new Color(0.76f, 0.88f, 0.78f, 1.0f), // Pastel Adaçayı Yeşili
-                new Color(0.96f, 0.90f, 0.70f, 1.0f), // Pastel Vanilya Sarısı
-                new Color(0.85f, 0.80f, 0.88f, 1.0f)  // Pastel Lavanta
+                new Color(0.92f, 0.82f, 0.72f, 1.0f), // Kraft / Parchment
+                new Color(0.72f, 0.82f, 0.90f, 1.0f), // Pastel Sky Blue
+                new Color(0.92f, 0.75f, 0.78f, 1.0f), // Pastel Rose
+                new Color(0.76f, 0.88f, 0.78f, 1.0f), // Pastel Sage Green
+                new Color(0.96f, 0.90f, 0.70f, 1.0f), // Pastel Vanilla Yellow
+                new Color(0.85f, 0.80f, 0.88f, 1.0f)  // Pastel Lavender
         };
 
         for (int i = 0; i < 70; i++) {
@@ -426,14 +427,13 @@ public class TargetingGame extends ApplicationAdapter {
             Body body = world.createBody(bdef);
 
             PolygonShape box = new PolygonShape();
-            // Rastgele dikdörtgen/kare kâğıt kırpıntı boyutları
             float halfW = MathUtils.random(5f, 11f) / PPM;
             float halfH = MathUtils.random(5f, 11f) / PPM;
             box.setAsBox(halfW, halfH);
 
             FixtureDef fdef = new FixtureDef();
             fdef.shape = box;
-            fdef.density = 0.8f;   // Kâğıt gibi hafif
+            fdef.density = 0.8f;   // Light paper physics
             fdef.friction = 0.6f;
             fdef.restitution = 0.55f;
             body.createFixture(fdef);
@@ -451,13 +451,13 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // SCENE2D MENÜ, AYARLAR VE İSTATİSTİKLER EKRANI
+    // SCENE2D MENUS: MAIN MENU, SETTINGS & STATS
     // ==========================================
 
     private void buildScene2DUI() {
         stage.clear();
 
-        // 1. ANA MENÜ TABLOSU
+        // 1. MAIN MENU TABLE
         menuTable = new Table();
         menuTable.setFillParent(true);
         menuTable.center();
@@ -467,9 +467,9 @@ public class TargetingGame extends ApplicationAdapter {
         menuCard.pad(30f, 40f, 35f, 40f);
 
         Label titleLabel = new Label("SUDOKU MASTER", skin, "title");
-        Label subtitleLabel = new Label("KÂĞIT & KALEM EDİSYONU", skin, "small");
+        Label subtitleLabel = new Label("PAPER & PENCIL EDITION", skin, "small");
 
-        // Zorluk Butonları Satırı
+        // Difficulty Selector Row
         Table diffTable = new Table();
         for (SudokuEngine.Difficulty diff : SudokuEngine.Difficulty.values()) {
             final SudokuEngine.Difficulty d = diff;
@@ -484,7 +484,7 @@ public class TargetingGame extends ApplicationAdapter {
             diffTable.add(diffBtn).width(75f).height(32f).pad(3f);
         }
 
-        TextButton playButton = new TextButton("YENİ OYUN", skin, "play");
+        TextButton playButton = new TextButton("NEW GAME", skin, "play");
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -493,7 +493,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         });
 
-        resumeMenuButton = new TextButton("DEVAM ET", skin, "default");
+        resumeMenuButton = new TextButton("RESUME", skin, "default");
         resumeMenuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -504,7 +504,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         });
 
-        TextButton statsButton = new TextButton("İSTATİSTİKLER", skin, "default");
+        TextButton statsButton = new TextButton("STATISTICS", skin, "default");
         statsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -514,7 +514,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         });
 
-        TextButton settingsButton = new TextButton("AYARLAR", skin, "default");
+        TextButton settingsButton = new TextButton("SETTINGS", skin, "default");
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -524,7 +524,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         });
 
-        TextButton quitButton = new TextButton("ÇIKIŞ", skin, "default");
+        TextButton quitButton = new TextButton("QUIT", skin, "default");
         quitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -545,7 +545,7 @@ public class TargetingGame extends ApplicationAdapter {
         menuTable.add(menuCard);
         stage.addActor(menuTable);
 
-        // 2. AYARLAR TABLOSU
+        // 2. SETTINGS TABLE
         settingsTable = new Table();
         settingsTable.setFillParent(true);
         settingsTable.center();
@@ -555,7 +555,7 @@ public class TargetingGame extends ApplicationAdapter {
         settingsCard.setBackground(skin.getDrawable("card-bg"));
         settingsCard.pad(35f, 45f, 35f, 45f);
 
-        Label setHeader = new Label("AYARLAR", skin, "title");
+        Label setHeader = new Label("SETTINGS", skin, "title");
 
         soundSettingButton = new TextButton(getSoundButtonText(), skin, "default");
         soundSettingButton.addListener(new ClickListener() {
@@ -581,7 +581,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         });
 
-        TextButton settingsBackBtn = new TextButton("< GERİ DÖN", skin, "play");
+        TextButton settingsBackBtn = new TextButton("< BACK", skin, "play");
         settingsBackBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -598,7 +598,7 @@ public class TargetingGame extends ApplicationAdapter {
         settingsTable.add(settingsCard);
         stage.addActor(settingsTable);
 
-        // 3. İSTATİSTİKLER TABLOSU
+        // 3. STATISTICS TABLE
         statsTable = new Table();
         statsTable.setFillParent(true);
         statsTable.center();
@@ -608,16 +608,16 @@ public class TargetingGame extends ApplicationAdapter {
         statsCard.setBackground(skin.getDrawable("card-bg"));
         statsCard.pad(30f, 40f, 35f, 40f);
 
-        Label statsHeader = new Label("İSTATİSTİKLER", skin, "title");
+        Label statsHeader = new Label("STATISTICS", skin, "title");
 
-        totalGamesLabel = new Label("Tamamlanan Oyun: 0", skin, "default");
-        bestTimeEasyLabel = new Label("En İyi (Kolay): --:--", skin, "default");
-        bestTimeMediumLabel = new Label("En İyi (Orta): --:--", skin, "default");
-        bestTimeHardLabel = new Label("En İyi (Zor): --:--", skin, "default");
-        bestTimeExpertLabel = new Label("En İyi (Uzman): --:--", skin, "default");
-        totalPlayTimeLabel = new Label("Toplam Oynama: 0 dk", skin, "small");
+        totalGamesLabel = new Label("Games Completed: 0", skin, "default");
+        bestTimeEasyLabel = new Label("Best Time (Easy): --:--", skin, "default");
+        bestTimeMediumLabel = new Label("Best Time (Medium): --:--", skin, "default");
+        bestTimeHardLabel = new Label("Best Time (Hard): --:--", skin, "default");
+        bestTimeExpertLabel = new Label("Best Time (Expert): --:--", skin, "default");
+        totalPlayTimeLabel = new Label("Total Play Time: 0m", skin, "small");
 
-        TextButton statsBackBtn = new TextButton("< GERİ DÖN", skin, "play");
+        TextButton statsBackBtn = new TextButton("< BACK", skin, "play");
         statsBackBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -642,11 +642,11 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     private String getSoundButtonText() {
-        return saveManager.isSoundEnabled() ? "SES EFEKTLERİ: AÇIK" : "SES EFEKTLERİ: KAPALI";
+        return saveManager.isSoundEnabled() ? "SOUND EFFECTS: ON" : "SOUND EFFECTS: OFF";
     }
 
     private String getLightButtonText() {
-        return saveManager.isLightEnabled() ? "MASA LAMBASI IŞIĞI: AÇIK" : "MASA LAMBASI IŞIĞI: KAPALI";
+        return saveManager.isLightEnabled() ? "DESK LAMP LIGHT: ON" : "DESK LAMP LIGHT: OFF";
     }
 
     private void updateResumeButtonState() {
@@ -655,16 +655,16 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     private void updateStatsData() {
-        totalGamesLabel.setText("Tamamlanan Oyun: " + saveManager.getGamesCompleted());
-        bestTimeEasyLabel.setText("En İyi (Kolay): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.EASY)));
-        bestTimeMediumLabel.setText("En İyi (Orta): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.MEDIUM)));
-        bestTimeHardLabel.setText("En İyi (Zor): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.HARD)));
-        bestTimeExpertLabel.setText("En İyi (Uzman): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.EXPERT)));
-        totalPlayTimeLabel.setText("Toplam Süre: " + SaveManager.formatTotalTime(saveManager.getTotalPlayTime()));
+        totalGamesLabel.setText("Games Completed: " + saveManager.getGamesCompleted());
+        bestTimeEasyLabel.setText("Best Time (Easy): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.EASY)));
+        bestTimeMediumLabel.setText("Best Time (Medium): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.MEDIUM)));
+        bestTimeHardLabel.setText("Best Time (Hard): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.HARD)));
+        bestTimeExpertLabel.setText("Best Time (Expert): " + SaveManager.formatTime(saveManager.getBestTime(SudokuEngine.Difficulty.EXPERT)));
+        totalPlayTimeLabel.setText("Total Play Time: " + SaveManager.formatTotalTime(saveManager.getTotalPlayTime()));
     }
 
     /**
-     * Ekranlar arası Tween ile yumuşak fade (kâğıt tonu açılıp kapanması) animasyonu.
+     * Executes smooth parchment fade transition between screens using Tween Engine.
      */
     private void transitionToState(final GameState targetState) {
         if (isTransitioning) return;
@@ -698,7 +698,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // OYUN İÇİ ARAYÜZ (HUD & NUMPAD)
+    // IN-GAME UI (HUD & NUMPAD)
     // ==========================================
 
     private void buildGameUI() {
@@ -728,9 +728,9 @@ public class TargetingGame extends ApplicationAdapter {
         Color quitHovBrd = new Color(0.60f, 0.25f, 0.25f, 1.0f);
         Color quitTxt = new Color(0.50f, 0.14f, 0.16f, 1.0f);
 
-        // --- HUD Üst Bar Butonları ---
+        // --- HUD Top Bar Buttons ---
         hudButtons.add(new UIElement(
-                25f, SCREEN_HEIGHT - 54f, 105f, 38f, "MENÜ",
+                25f, SCREEN_HEIGHT - 54f, 105f, 38f, "MENU",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> {
                     saveManager.saveGame(sudoku);
@@ -739,7 +739,7 @@ public class TargetingGame extends ApplicationAdapter {
         ));
 
         hudButtons.add(new UIElement(
-                140f, SCREEN_HEIGHT - 54f, 115f, 38f, "AYARLAR",
+                140f, SCREEN_HEIGHT - 54f, 115f, 38f, "SETTINGS",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> {
                     saveManager.saveGame(sudoku);
@@ -750,13 +750,13 @@ public class TargetingGame extends ApplicationAdapter {
 
         hudButtons.add(new UIElement(
                 SCREEN_WIDTH - 275f, SCREEN_HEIGHT - 54f, 120f, 38f,
-                saveManager.isSoundEnabled() ? "SES: AÇIK" : "SES: KAPALI",
+                saveManager.isSoundEnabled() ? "SOUND: ON" : "SOUND: OFF",
                 base, hover, border, hoverBorder, txt, txt,
                 this::toggleAudio
         ));
 
         hudButtons.add(new UIElement(
-                SCREEN_WIDTH - 145f, SCREEN_HEIGHT - 54f, 120f, 38f, "+ YENİ",
+                SCREEN_WIDTH - 145f, SCREEN_HEIGHT - 54f, 120f, 38f, "+ NEW",
                 playBase, playHov, playBrd, playHovBrd, playTxt, playTxt,
                 () -> startNewGame(selectedDifficulty)
         ));
@@ -776,7 +776,7 @@ public class TargetingGame extends ApplicationAdapter {
         );
         hudButtons.add(diffPillButton);
 
-        // --- Sağ Kontrol Paneli (Geri Al, Notlar, Sil, İpucu) ---
+        // --- Right Control Panel (Undo, Notes, Erase, Hint) ---
         float panelX = 735f;
         float actBtnW = 100f;
         float actBtnH = 50f;
@@ -784,7 +784,7 @@ public class TargetingGame extends ApplicationAdapter {
         float actY = 560f;
 
         actionButtons.add(new UIElement(
-                panelX, actY, actBtnW, actBtnH, "GERİ AL",
+                panelX, actY, actBtnW, actBtnH, "UNDO",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> {
                     if (sudoku.undo()) {
@@ -795,7 +795,7 @@ public class TargetingGame extends ApplicationAdapter {
         ));
 
         actionButtons.add(new UIElement(
-                panelX + (actBtnW + actGap), actY, actBtnW, actBtnH, "NOTLAR",
+                panelX + (actBtnW + actGap), actY, actBtnW, actBtnH, "NOTES",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> {
                     sudoku.togglePencilMode();
@@ -804,7 +804,7 @@ public class TargetingGame extends ApplicationAdapter {
         ));
 
         actionButtons.add(new UIElement(
-                panelX + (actBtnW + actGap) * 2, actY, actBtnW, actBtnH, "SİL",
+                panelX + (actBtnW + actGap) * 2, actY, actBtnW, actBtnH, "ERASE",
                 quitBase, quitHov, quitBrd, quitHovBrd, quitTxt, quitTxt,
                 () -> {
                     if (sudoku.erase(selectedRow, selectedCol)) {
@@ -820,7 +820,7 @@ public class TargetingGame extends ApplicationAdapter {
         Color hintHovBrd = new Color(0.86f, 0.70f, 0.18f, 1.0f);
         Color hintTxt = new Color(0.48f, 0.32f, 0.08f, 1.0f);
         actionButtons.add(new UIElement(
-                panelX + (actBtnW + actGap) * 3, actY, actBtnW, actBtnH, "İPUCU",
+                panelX + (actBtnW + actGap) * 3, actY, actBtnW, actBtnH, "HINT",
                 hintBase, hintHov, hintBrd, hintHovBrd, hintTxt, hintTxt,
                 () -> {
                     if (sudoku.giveHint(selectedRow, selectedCol)) {
@@ -831,7 +831,7 @@ public class TargetingGame extends ApplicationAdapter {
                 }
         ));
 
-        // --- 3x3 NumPad (1-9 Rakam Tuşları) ---
+        // --- 3x3 NumPad (Digits 1 to 9) ---
         float numW = 132f;
         float numH = 92f;
         float numGapX = 20f;
@@ -852,7 +852,7 @@ public class TargetingGame extends ApplicationAdapter {
             ));
         }
 
-        // --- Duraklatma Modalı Butonları ---
+        // --- Pause Modal Buttons ---
         float pauseCardW = 380f;
         float pauseCardH = 370f;
         float pauseCx = (SCREEN_WIDTH - pauseCardW) / 2f;
@@ -862,12 +862,12 @@ public class TargetingGame extends ApplicationAdapter {
         float pauseBx = pauseCx + 40f;
 
         pauseButtons.add(new UIElement(
-                pauseBx, pauseCy + 235f, pauseBtnW, pauseBtnH, "DEVAM ET",
+                pauseBx, pauseCy + 235f, pauseBtnW, pauseBtnH, "RESUME",
                 playBase, playHov, playBrd, playHovBrd, playTxt, playTxt,
                 () -> state = GameState.PLAYING
         ));
         pauseButtons.add(new UIElement(
-                pauseBx, pauseCy + 175f, pauseBtnW, pauseBtnH, "AYARLAR",
+                pauseBx, pauseCy + 175f, pauseBtnW, pauseBtnH, "SETTINGS",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> {
                     stateBeforeSettings = GameState.PAUSED;
@@ -875,12 +875,12 @@ public class TargetingGame extends ApplicationAdapter {
                 }
         ));
         pauseButtons.add(new UIElement(
-                pauseBx, pauseCy + 115f, pauseBtnW, pauseBtnH, "+ YENİ OYUN",
+                pauseBx, pauseCy + 115f, pauseBtnW, pauseBtnH, "+ NEW GAME",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> startNewGame(selectedDifficulty)
         ));
         pauseButtons.add(new UIElement(
-                pauseBx, pauseCy + 55f, pauseBtnW, pauseBtnH, "ANA MENÜ",
+                pauseBx, pauseCy + 55f, pauseBtnW, pauseBtnH, "MAIN MENU",
                 quitBase, quitHov, quitBrd, quitHovBrd, quitTxt, quitTxt,
                 () -> {
                     saveManager.saveGame(sudoku);
@@ -888,26 +888,26 @@ public class TargetingGame extends ApplicationAdapter {
                 }
         ));
 
-        // --- Zafer Modalı Butonları ---
+        // --- Victory Modal Buttons ---
         victoryButtons.add(new UIElement(
-                (SCREEN_WIDTH - 260f) / 2f, 110f, 260f, 48f, "YENİDEN OYNA",
+                (SCREEN_WIDTH - 260f) / 2f, 110f, 260f, 48f, "PLAY AGAIN",
                 playBase, playHov, playBrd, playHovBrd, playTxt, playTxt,
                 () -> startNewGame(selectedDifficulty)
         ));
         victoryButtons.add(new UIElement(
-                (SCREEN_WIDTH - 260f) / 2f, 50f, 260f, 44f, "ANA MENÜ",
+                (SCREEN_WIDTH - 260f) / 2f, 50f, 260f, 44f, "MAIN MENU",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> transitionToState(GameState.MAIN_MENU)
         ));
 
-        // --- Oyun Bitti Modalı Butonları ---
+        // --- Game Over Modal Buttons ---
         gameOverButtons.add(new UIElement(
-                (SCREEN_WIDTH - 260f) / 2f, 150f, 260f, 48f, "TEKRAR DENE",
+                (SCREEN_WIDTH - 260f) / 2f, 150f, 260f, 48f, "TRY AGAIN",
                 quitBase, quitHov, quitBrd, quitHovBrd, quitTxt, quitTxt,
                 () -> startNewGame(selectedDifficulty)
         ));
         gameOverButtons.add(new UIElement(
-                (SCREEN_WIDTH - 260f) / 2f, 90f, 260f, 44f, "ANA MENÜ",
+                (SCREEN_WIDTH - 260f) / 2f, 90f, 260f, 44f, "MAIN MENU",
                 base, hover, border, hoverBorder, txt, txt,
                 () -> transitionToState(GameState.MAIN_MENU)
         ));
@@ -941,17 +941,17 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // TWEEN ANIMASYONLARI
+    // TWEEN ANIMATIONS
     // ==========================================
 
     /**
-     * Hücre seçildiğinde yumuşak kâğıt vurgusu ve hafif scale animasyonu.
+     * Smooth paper highlight and scale animation when selecting a cell.
      */
     private void selectCell(int r, int c) {
         if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
         if (r == selectedRow && c == selectedCol) return;
 
-        // Önceki seçili hücre animasyonu (geri çekilme)
+        // Animate previous cell back to rest position
         Cell prevCell = cells[selectedRow][selectedCol];
         Tween.to(prevCell, CellAccessor.TYPE_SELECT_HIGHLIGHT, 0.22f)
                 .target(0.0f)
@@ -965,7 +965,7 @@ public class TargetingGame extends ApplicationAdapter {
         selectedRow = r;
         selectedCol = c;
 
-        // Yeni seçilen hücre animasyonu (hafif kâğıt kabarması & renk geçişi)
+        // Animate newly selected cell with paper elevation & tint
         Cell newCell = cells[selectedRow][selectedCol];
         Tween.to(newCell, CellAccessor.TYPE_SELECT_HIGHLIGHT, 0.20f)
                 .target(1.0f)
@@ -980,12 +980,12 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Sayı yerleştirildiğinde "kalemle yazma" hissi veren yumuşak pop animasyonu (0.9 -> 1.05 -> 1.0).
+     * Tactile pencil write pop animation (0.9 -> 1.05 -> 1.0) or shake animation on conflict.
      */
     private void animateNumberPlacement(int r, int c, boolean isConflict) {
         Cell cell = cells[r][c];
         if (isConflict) {
-            // Hatalı sayıda: Kısa sallanma (shake) ve kırmızı mürekkep tonuna geçiş
+            // Error placement: Short shake animation and red ink color transition
             Timeline.createParallel()
                     .push(Timeline.createSequence()
                             .push(Tween.to(cell, CellAccessor.TYPE_OFFSET_X, 0.04f).target(-5f).ease(TweenEquations.easeInOutQuad))
@@ -998,7 +998,7 @@ public class TargetingGame extends ApplicationAdapter {
                             .push(Tween.to(cell, CellAccessor.TYPE_ERROR_HIGHLIGHT, 0.45f).target(0.0f).ease(TweenEquations.easeInOutQuad)))
                     .start(tweenManager);
         } else {
-            // Başarılı yazımda: Kalemle yazma pop animasyonu
+            // Successful placement: Pencil write tactile pop animation
             Timeline.createSequence()
                     .push(Tween.set(cell, CellAccessor.TYPE_POP_SCALE).target(0.90f))
                     .push(Tween.to(cell, CellAccessor.TYPE_POP_SCALE, 0.10f).target(1.05f).ease(TweenEquations.easeOutQuad))
@@ -1041,7 +1041,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // GİRDİ YÖNETİMİ (TOUCH & MOUSE UYUMLU)
+    // INPUT HANDLING (TOUCH & MOUSE COMPATIBLE)
     // ==========================================
 
     private void setupInput() {
@@ -1064,10 +1064,10 @@ public class TargetingGame extends ApplicationAdapter {
                         if (btn.handleClick(mx, my, sfx)) return true;
                     }
 
-                    // Tahta Hücre Dokunma Kontrolü (Hızlı ve Kesin)
+                    // Board cell touch detection
                     if (mx >= boardX && mx <= boardX + boardSize && my >= boardY && my <= boardY + boardSize) {
                         int col = (int) ((mx - boardX) / cellSize);
-                        int row = (int) ((boardSize - (my - boardY)) / cellSize); // Y ters çevrilir
+                        int row = (int) ((boardSize - (my - boardY)) / cellSize); // Invert Y
                         if (row >= 0 && row < 9 && col >= 0 && col < 9) {
                             selectCell(row, col);
                             return true;
@@ -1194,7 +1194,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // RENDER DÖNGÜSÜ
+    // RENDER LOOP
     // ==========================================
 
     @Override
@@ -1202,10 +1202,10 @@ public class TargetingGame extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
         if (dt > 0.1f) dt = 0.1f;
 
-        // 1. Universal Tween Engine Güncellemesi
+        // 1. Universal Tween Engine Update
         tweenManager.update(dt);
 
-        // 2. Zaman & Fizik Güncellemesi
+        // 2. Timer & Physics Simulation
         if (state == GameState.PLAYING) {
             sudoku.updateTimer(dt);
             saveManager.addTotalPlayTime(dt);
@@ -1215,7 +1215,7 @@ public class TargetingGame extends ApplicationAdapter {
             world.step(1 / 60f, 6, 2);
         }
 
-        // 3. Dokunmatik / Fare Işık Takibi (Android ve Masaüstü Uyumlu)
+        // 3. Touch / Pointer Tracking for Desk Lamp
         if (Gdx.input.isTouched()) {
             Vector3 touchCoords = viewport.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             lastTouchPos.set(touchCoords);
@@ -1224,14 +1224,14 @@ public class TargetingGame extends ApplicationAdapter {
             cursorLight.setPosition(lastTouchPos.x / PPM, lastTouchPos.y / PPM);
         }
 
-        // 4. Kâğıt Teması Arka Plan Temizliği (Krem / Parşömen)
+        // 4. Paper Theme Parchment Background Clear
         Gdx.gl.glClearColor(0.965f, 0.945f, 0.900f, 1.0f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         viewport.apply();
         batch.setProjectionMatrix(camera.combined);
 
-        // 5. Arka Plan Kâğıt Çizgileri ve Oyun Tahtası
+        // 5. Notebook Margins, Grid & Controls
         batch.begin();
         renderNotebookLines();
 
@@ -1247,7 +1247,7 @@ public class TargetingGame extends ApplicationAdapter {
         }
         batch.end();
 
-        // 6. Box2DLights (Sıcak Masa Lambası)
+        // 6. Box2DLights (Warm Desk Lamp)
         if (saveManager.isLightEnabled()) {
             box2dCamera.position.set(camera.position.x / PPM, camera.position.y / PPM, 0);
             box2dCamera.update();
@@ -1255,7 +1255,7 @@ public class TargetingGame extends ApplicationAdapter {
             rayHandler.updateAndRender();
         }
 
-        // 7. Modallar ve Scene2D Arayüzü
+        // 7. Modals & Scene2D Stage
         batch.setProjectionMatrix(camera.combined);
 
         if (state == GameState.MAIN_MENU || state == GameState.SETTINGS || state == GameState.STATS) {
@@ -1273,7 +1273,7 @@ public class TargetingGame extends ApplicationAdapter {
             batch.end();
         }
 
-        // 8. Ekranlar Arası Yumuşak Fade Geçiş Çizimi (Kâğıt Krem Tonu)
+        // 8. Screen Fade Overlay (Parchment Tone)
         if (screenFade.getAlpha() > 0.001f) {
             batch.begin();
             drawer.setColor(new Color(0.965f, 0.945f, 0.900f, screenFade.getAlpha()));
@@ -1283,41 +1283,41 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Otantik çizgili defter kâğıdı deseni (mavi kurşun kalem satırları ve kırmızı marjin çizgisi).
+     * Renders authentic notebook paper guidelines (soft blue lines and pink/red margin rule).
      */
     private void renderNotebookLines() {
-        // Yumuşak mavi kâğıt çizgileri
+        // Soft blue notebook ruling lines
         drawer.setColor(new Color(0.72f, 0.80f, 0.88f, 0.40f));
         for (float y = 25f; y < SCREEN_HEIGHT; y += 32f) {
             drawer.line(0, y, SCREEN_WIDTH, y, 1.2f);
         }
-        // Sol kenar klasik defter marjin çizgisi (yumuşak kırmızı kalem)
+        // Classic notebook margin rule on the left side
         drawer.setColor(new Color(0.92f, 0.60f, 0.60f, 0.50f));
         drawer.line(80f, 0, 80f, SCREEN_HEIGHT, 2.0f);
     }
 
     private void renderGameHeader() {
-        // Üst Kâğıt Başlık Şeridi
+        // Top paper header ribbon
         drawer.setColor(new Color(0.93f, 0.90f, 0.84f, 0.96f));
         drawer.filledRectangle(0, SCREEN_HEIGHT - 65f, SCREEN_WIDTH, 65f);
         drawer.setColor(new Color(0.76f, 0.72f, 0.66f, 0.90f));
         drawer.line(0, SCREEN_HEIGHT - 65f, SCREEN_WIDTH, SCREEN_HEIGHT - 65f, 2f);
 
-        // Üst Bar Butonları
+        // Header buttons
         for (int i = 0; i < hudButtons.size(); i++) {
             renderButton(hudButtons.get(i), i == 4 ? smallFont : buttonFont);
         }
 
-        // Merkez Sayaç: Süre
+        // Center timer display
         float midX = SCREEN_WIDTH / 2f;
         float headerY = SCREEN_HEIGHT - 32f;
         headerFont.setColor(new Color(0.18f, 0.18f, 0.22f, 1.0f));
-        String timeStr = "Süre: " + sudoku.getFormattedTime();
+        String timeStr = "Time: " + sudoku.getFormattedTime();
         layout.setText(headerFont, timeStr);
         headerFont.draw(batch, timeStr, midX - layout.width / 2f, headerY + layout.height / 2f);
 
-        // Hata Kutusu
-        String mistakeStr = "Hata: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
+        // Mistakes box
+        String mistakeStr = "Mistakes: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
         drawer.setColor(new Color(0.91f, 0.87f, 0.80f, 0.95f));
         drawer.filledRectangle(midX + 130f, headerY - 14f, 130f, 28f);
         drawer.setColor(sudoku.getMistakes() > 0 ? new Color(0.85f, 0.22f, 0.22f, 0.90f) : new Color(0.68f, 0.64f, 0.58f, 0.85f));
@@ -1329,24 +1329,24 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     /**
-     * Kâğıt Temalı Sudoku Tahtası Çizimi (Tween animasyonları entegreli).
+     * Renders the paper-themed Sudoku board with Universal Tween Engine animations.
      */
     private void renderSudokuBoard() {
-        // Kâğıt Kart Dış Gölgesi
+        // Paper card drop shadow
         drawer.setColor(new Color(0.78f, 0.74f, 0.68f, 0.60f));
         drawer.filledRectangle(boardX + 4f, boardY - 4f, boardSize, boardSize);
 
-        // Kırık Beyaz / Krem Tahta Zemin
+        // Off-white / cream paper board background
         drawer.setColor(new Color(0.995f, 0.995f, 0.99f, 1.0f));
         drawer.filledRectangle(boardX, boardY, boardSize, boardSize);
 
-        // İnce Kalem Çerçevesi
+        // Fine pencil border
         drawer.setColor(new Color(0.25f, 0.24f, 0.22f, 0.95f));
         drawer.rectangle(boardX, boardY, boardSize, boardSize, 2.5f);
 
         int selectedVal = sudoku.getCell(selectedRow, selectedCol);
 
-        // Hücrelerin Çizimi (Universal Tween Engine animasyonlarıyla)
+        // Draw cells with Tween-driven animations
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 Cell cellAnim = cells[r][c];
@@ -1360,26 +1360,26 @@ public class TargetingGame extends ApplicationAdapter {
                 boolean isSameNumber = (selectedVal > 0 && val == selectedVal);
                 boolean isConflict = sudoku.isConflict(r, c);
 
-                // 1. Satır / Sütun / Kutu Akraba Hücre Vurgusu (Hafif Sarı Kâğıt Vurgusu)
+                // 1. Peer Cell Highlight (Subtle Warm Paper Tint)
                 if (isSamePeer && !isSelected) {
                     drawer.setColor(new Color(0.96f, 0.94f, 0.84f, 0.55f));
                     drawer.filledRectangle(cx, cy, cellSize, cellSize);
                 }
 
-                // 2. Tahta Boyunca Aynı Sayıların Vurgusu (Hafif Mavi Mürekkep Vurgusu)
+                // 2. Matching Digits Highlight (Subtle Blue Ink Tint)
                 if (isSameNumber && !isSelected) {
                     drawer.setColor(new Color(0.84f, 0.91f, 0.93f, 0.70f));
                     drawer.filledRectangle(cx, cy, cellSize, cellSize);
                 }
 
-                // 3. Hatalı Çakışma / Sallanma Durumu (Kırmızı Mürekkep Geçişi)
+                // 3. Error Conflict / Shake Animation (Red Ink Tint)
                 if (isConflict || cellAnim.getErrorHighlight() > 0.01f) {
                     float alpha = Math.max(0.70f, cellAnim.getErrorHighlight());
                     drawer.setColor(new Color(0.96f, 0.78f, 0.78f, alpha));
                     drawer.filledRectangle(cx, cy, cellSize, cellSize);
                 }
 
-                // 4. Seçili Hücre Vurgusu (Tween Destekli Kâğıt Kabarması)
+                // 4. Selected Cell Highlight (Tween-powered Elevation & Frame)
                 if (isSelected || cellAnim.getSelectHighlight() > 0.01f) {
                     float hAlpha = cellAnim.getSelectHighlight();
                     drawer.setColor(new Color(0.92f, 0.88f, 0.75f, 0.85f * hAlpha));
@@ -1389,20 +1389,20 @@ public class TargetingGame extends ApplicationAdapter {
                     drawer.rectangle(cx + 1f, cy + 1f, cellSize - 2f, cellSize - 2f, 2.5f);
                 }
 
-                // 5. Rakam veya Notların Çizimi (Kalem Pop Efekti)
+                // 5. Digit & Notes Rendering (Tactile Pencil Pop Effect)
                 if (val > 0) {
                     boolean isClue = (sudoku.getInitialCell(r, c) > 0);
                     BitmapFont activeFont = isClue ? clueDigitFont : playerDigitFont;
 
                     if (isConflict) {
-                        activeFont.setColor(0.85f, 0.18f, 0.18f, 1.0f); // Kırmızı düzeltme kalemi
+                        activeFont.setColor(0.85f, 0.18f, 0.18f, 1.0f); // Red correction pen
                     } else if (isClue) {
-                        activeFont.setColor(0.12f, 0.14f, 0.18f, 1.0f); // Kalın siyah basılı ipucu
+                        activeFont.setColor(0.12f, 0.14f, 0.18f, 1.0f); // Black printed clue
                     } else {
-                        activeFont.setColor(0.08f, 0.32f, 0.78f, 1.0f); // Mavi tükenmez kalem mürekkebi
+                        activeFont.setColor(0.08f, 0.32f, 0.78f, 1.0f); // Blue ink pen
                     }
 
-                    // Kalem Pop Animasyonu Ölçeği
+                    // Apply tactile pop scale animation
                     float effectiveScale = cellAnim.getPopScale();
                     float originalScaleX = activeFont.getScaleX();
                     float originalScaleY = activeFont.getScaleY();
@@ -1414,7 +1414,7 @@ public class TargetingGame extends ApplicationAdapter {
 
                     activeFont.getData().setScale(originalScaleX, originalScaleY);
                 } else {
-                    // Kurşun Kalem Notları (3x3 Mini Izgara)
+                    // Graphite Pencil Notes (3x3 Subgrid)
                     float subCell = cellSize / 3f;
                     for (int n = 1; n <= 9; n++) {
                         if (sudoku.hasNote(r, c, n)) {
@@ -1423,7 +1423,7 @@ public class TargetingGame extends ApplicationAdapter {
                             float nx = cx + nc * subCell;
                             float ny = cy + (2 - nr) * subCell;
 
-                            noteFont.setColor(0.38f, 0.40f, 0.44f, 0.95f); // Grafit kurşun kalem grisi
+                            noteFont.setColor(0.38f, 0.40f, 0.44f, 0.95f); // Graphite pencil gray
                             String noteStr = String.valueOf(n);
                             layout.setText(noteFont, noteStr);
                             noteFont.draw(batch, noteStr, nx + (subCell - layout.width) / 2f, ny + (subCell + layout.height) / 2f);
@@ -1433,7 +1433,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         }
 
-        // İnce Izgara Çizgileri (Kurşun Kalem)
+        // Fine Grid Lines (Pencil)
         drawer.setColor(new Color(0.72f, 0.70f, 0.66f, 0.85f));
         for (int i = 1; i < 9; i++) {
             if (i % 3 != 0) {
@@ -1443,7 +1443,7 @@ public class TargetingGame extends ApplicationAdapter {
             }
         }
 
-        // Kalın 3x3 Kutu Çizgileri (Mürekkep Çizgisi)
+        // Bold 3x3 Box Lines (Ink Rule)
         drawer.setColor(new Color(0.22f, 0.22f, 0.25f, 0.95f));
         for (int i = 0; i <= 3; i++) {
             float pos = i * (cellSize * 3);
@@ -1453,7 +1453,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     private void renderControlPanel() {
-        // Kontrol Butonları (Geri Al, Notlar, Sil, İpucu)
+        // Control Action Buttons (Undo, Notes, Erase, Hint)
         for (int i = 0; i < actionButtons.size(); i++) {
             UIElement btn = actionButtons.get(i);
             if (i == 1 && sudoku.isPencilMode()) {
@@ -1474,7 +1474,7 @@ public class TargetingGame extends ApplicationAdapter {
 
             renderButton(btn, clueDigitFont);
 
-            String remText = remaining > 0 ? remaining + " kaldı" : "Bitti";
+            String remText = remaining > 0 ? remaining + " left" : "Done";
             smallFont.setColor(remaining > 0 ? new Color(0.40f, 0.42f, 0.48f, 0.95f) : new Color(0.15f, 0.55f, 0.25f, 0.95f));
             layout.setText(smallFont, remText);
             smallFont.draw(batch, remText, btn.x + (btn.width - layout.width) / 2f, btn.y + 22f);
@@ -1488,7 +1488,7 @@ public class TargetingGame extends ApplicationAdapter {
         Color bg = btn.baseColor.cpy().lerp(btn.hoverColor, btn.hoverAnim);
         Color border = btn.borderColor.cpy().lerp(btn.hoverBorderColor, btn.hoverAnim);
 
-        // Kâğıt Gölgesi
+        // Tactile Paper Drop Shadow
         drawer.setColor(new Color(0.75f, 0.70f, 0.65f, 0.35f + btn.hoverAnim * 0.20f));
         drawer.filledRectangle(btn.x + 2f, dy - 2f, btn.width, btn.height);
 
@@ -1517,13 +1517,13 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     // ==========================================
-    // KÂĞIT MODAL PENCERELERİ
+    // PAPER MODAL DIALOGS
     // ==========================================
 
     private void renderPauseModal() {
         float cardW = 380f;
         float cardH = 370f;
-        renderModalCard(cardW, cardH, "OYUN DURAKLATILDI");
+        renderModalCard(cardW, cardH, "GAME PAUSED");
         for (UIElement btn : pauseButtons) {
             renderButton(btn, buttonFont);
         }
@@ -1535,16 +1535,16 @@ public class TargetingGame extends ApplicationAdapter {
         float cx = (SCREEN_WIDTH - cardW) / 2f;
         float cy = (SCREEN_HEIGHT - cardH) / 2f;
 
-        renderModalCard(cardW, cardH, "TEBRİKLER!");
+        renderModalCard(cardW, cardH, "CONGRATULATIONS!");
 
         headerFont.setColor(new Color(0.12f, 0.50f, 0.25f, 1.0f));
-        String sub = "SUDOKU ÇÖZÜLDÜ!";
+        String sub = "SUDOKU SOLVED!";
         layout.setText(headerFont, sub);
         headerFont.draw(batch, sub, cx + (cardW - layout.width) / 2f, cy + cardH - 85f);
 
-        String timeInfo = "Tamamlama Süresi: " + sudoku.getFormattedTime();
-        String diffInfo = "Zorluk: " + sudoku.getDifficulty().label;
-        String mistInfo = "Hata Sayısı: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
+        String timeInfo = "Completion Time: " + sudoku.getFormattedTime();
+        String diffInfo = "Difficulty: " + sudoku.getDifficulty().label;
+        String mistInfo = "Mistakes: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
 
         buttonFont.setColor(new Color(0.22f, 0.22f, 0.25f, 1.0f));
         layout.setText(buttonFont, timeInfo);
@@ -1565,10 +1565,10 @@ public class TargetingGame extends ApplicationAdapter {
         float cx = (SCREEN_WIDTH - cardW) / 2f;
         float cy = (SCREEN_HEIGHT - cardH) / 2f;
 
-        renderModalCard(cardW, cardH, "OYUN BİTTİ");
+        renderModalCard(cardW, cardH, "GAME OVER");
 
         headerFont.setColor(new Color(0.75f, 0.20f, 0.20f, 1.0f));
-        String info = "3 Hata Sınırına Ulaşıldı!";
+        String info = "3 Mistakes Limit Reached!";
         layout.setText(headerFont, info);
         headerFont.draw(batch, info, cx + (cardW - layout.width) / 2f, cy + cardH - 95f);
 
@@ -1581,15 +1581,15 @@ public class TargetingGame extends ApplicationAdapter {
         float cx = (SCREEN_WIDTH - w) / 2f;
         float cy = (SCREEN_HEIGHT - h) / 2f;
 
-        // Karartma Perdesi
+        // Dim overlay
         drawer.setColor(new Color(0.20f, 0.18f, 0.15f, 0.40f));
         drawer.filledRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        // Kâğıt Gölgesi
+        // Drop shadow
         drawer.setColor(new Color(0.75f, 0.70f, 0.65f, 0.45f));
         drawer.filledRectangle(cx + 6f, cy - 6f, w, h);
 
-        // Kâğıt Kart
+        // Paper card container
         drawer.setColor(new Color(0.98f, 0.96f, 0.92f, 0.98f));
         drawer.filledRectangle(cx, cy, w, h);
         drawer.setColor(new Color(0.35f, 0.32f, 0.30f, 0.95f));
