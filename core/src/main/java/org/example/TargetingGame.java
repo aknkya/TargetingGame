@@ -143,6 +143,7 @@ public class TargetingGame extends ApplicationAdapter {
     }
 
     private final List<UIElement> menuButtons = new ArrayList<>();
+    private final List<UIElement> difficultyButtons = new ArrayList<>();
     private final List<UIElement> inGameButtons = new ArrayList<>();
     private final List<UIElement> numPadButtons = new ArrayList<>();
     private final List<UIElement> modalButtons = new ArrayList<>();
@@ -309,9 +310,36 @@ public class TargetingGame extends ApplicationAdapter {
 
     private void buildUI() {
         menuButtons.clear();
+        difficultyButtons.clear();
         inGameButtons.clear();
         numPadButtons.clear();
         modalButtons.clear();
+
+        // --- 0. DIFFICULTY SELECTOR BUTTONS (Main Menu) ---
+        float diffW = 86f;
+        float diffH = 36f;
+        float cardW = 460f;
+        float cardH = 560f;
+        float cx = (SCREEN_WIDTH - cardW) / 2f;
+        float cy = (SCREEN_HEIGHT - cardH) / 2f;
+        float diffStartX = cx + (cardW - (diffW * 4 + 24f)) / 2f;
+        float diffY = cy + cardH - 155f;
+
+        for (SudokuEngine.Difficulty diff : SudokuEngine.Difficulty.values()) {
+            final SudokuEngine.Difficulty d = diff;
+            float dx = diffStartX + diff.ordinal() * (diffW + 8f);
+            difficultyButtons.add(new UIElement(
+                    dx, diffY, diffW, diffH, d.label,
+                    new Color(0.10f, 0.14f, 0.20f, 0.85f),
+                    new Color(0.18f, 0.35f, 0.55f, 0.95f),
+                    new Color(0.24f, 0.35f, 0.50f, 0.60f),
+                    new Color(0.40f, 0.75f, 1.0f, 0.90f),
+                    () -> {
+                        selectedDifficulty = d;
+                        sfx.playClick();
+                    }
+            ));
+        }
 
         // --- 1. MAIN MENU BUTTONS ---
         float menuW = 340f;
@@ -327,6 +355,9 @@ public class TargetingGame extends ApplicationAdapter {
                 new Color(0.25f, 0.85f, 0.70f, 0.70f), new Color(0.40f, 1.0f, 0.85f, 1.0f),
                 () -> {
                     sudoku.startNewGame(selectedDifficulty);
+                    if (inGameButtons.size() > 3) {
+                        inGameButtons.get(3).text = selectedDifficulty.label;
+                    }
                     state = GameState.PLAYING;
                 }
         ));
@@ -374,7 +405,30 @@ public class TargetingGame extends ApplicationAdapter {
                 SCREEN_WIDTH - 145f, SCREEN_HEIGHT - 54f, 120f, 38f, "+ YENİ",
                 new Color(0.10f, 0.28f, 0.26f, 0.85f), new Color(0.14f, 0.62f, 0.50f, 0.95f),
                 new Color(0.22f, 0.75f, 0.62f, 0.60f), new Color(0.35f, 0.95f, 0.80f, 0.90f),
-                () -> sudoku.startNewGame(selectedDifficulty)
+                () -> {
+                    sudoku.startNewGame(selectedDifficulty);
+                    if (inGameButtons.size() > 3) {
+                        inGameButtons.get(3).text = selectedDifficulty.label;
+                    }
+                }
+        ));
+
+        // Clickable In-Game Difficulty Pill (cycles difficulty!)
+        float midX = SCREEN_WIDTH / 2f;
+        float headerY = SCREEN_HEIGHT - 32f;
+        inGameButtons.add(new UIElement(
+                midX - 220f, headerY - 14f, 96f, 28f, selectedDifficulty.label,
+                new Color(0.14f, 0.26f, 0.40f, 0.85f), new Color(0.20f, 0.42f, 0.65f, 0.95f),
+                new Color(0.35f, 0.70f, 1.0f, 0.85f), new Color(0.55f, 0.85f, 1.0f, 1.0f),
+                () -> {
+                    int nextIdx = (selectedDifficulty.ordinal() + 1) % SudokuEngine.Difficulty.values().length;
+                    selectedDifficulty = SudokuEngine.Difficulty.values()[nextIdx];
+                    sudoku.startNewGame(selectedDifficulty);
+                    if (inGameButtons.size() > 3) {
+                        inGameButtons.get(3).text = selectedDifficulty.label;
+                    }
+                    sfx.playClick();
+                }
         ));
 
         // --- 3. CONTROL PANEL & NUMPAD (Right Side: x = 740 to 1180) ---
@@ -508,21 +562,9 @@ public class TargetingGame extends ApplicationAdapter {
                 float my = worldCoords.y;
 
                 if (state == GameState.MAIN_MENU) {
-                    // Check difficulty pills selection
-                    float diffW = 100f;
-                    float diffH = 36f;
-                    float diffStartX = (SCREEN_WIDTH - (diffW * 4 + 30f)) / 2f;
-                    float diffY = 395f;
-                    SudokuEngine.Difficulty[] diffs = SudokuEngine.Difficulty.values();
-                    for (int i = 0; i < diffs.length; i++) {
-                        float dx = diffStartX + i * (diffW + 10f);
-                        if (mx >= dx && mx <= dx + diffW && my >= diffY && my <= diffY + diffH) {
-                            selectedDifficulty = diffs[i];
-                            sfx.playClick();
-                            return true;
-                        }
+                    for (UIElement btn : difficultyButtons) {
+                        if (btn.handleClick(mx, my, sfx)) return true;
                     }
-
                     for (UIElement btn : menuButtons) {
                         if (btn.handleClick(mx, my, sfx)) return true;
                     }
@@ -668,6 +710,7 @@ public class TargetingGame extends ApplicationAdapter {
 
     private void updateHover(float mx, float my, float dt) {
         if (state == GameState.MAIN_MENU) {
+            for (UIElement btn : difficultyButtons) btn.update(mx, my, dt, sfx);
             for (UIElement btn : menuButtons) btn.update(mx, my, dt, sfx);
         } else if (state == GameState.PLAYING) {
             for (UIElement btn : inGameButtons) btn.update(mx, my, dt, sfx);
@@ -770,24 +813,14 @@ public class TargetingGame extends ApplicationAdapter {
         drawer.setColor(new Color(0.20f, 0.35f, 0.55f, 0.55f));
         drawer.line(0, SCREEN_HEIGHT - 65f, SCREEN_WIDTH, SCREEN_HEIGHT - 65f, 2f);
 
-        // Render In-Game top HUD buttons
-        for (int i = 0; i < 3; i++) {
-            renderButton(inGameButtons.get(i), buttonFont);
+        // Render In-Game top HUD buttons (Menu, Sound, New, Difficulty Pill)
+        for (int i = 0; i < inGameButtons.size() && i < 4; i++) {
+            renderButton(inGameButtons.get(i), i == 3 ? smallFont : buttonFont);
         }
 
-        // Center HUD: Difficulty Badge + Timer + Mistakes
+        // Center HUD: Timer + Mistakes
         float midX = SCREEN_WIDTH / 2f;
         float headerY = SCREEN_HEIGHT - 32f;
-
-        // Difficulty Pill
-        String diffText = sudoku.getDifficulty().label;
-        drawer.setColor(new Color(0.14f, 0.26f, 0.40f, 0.85f));
-        drawer.filledRectangle(midX - 220f, headerY - 14f, 90f, 28f);
-        drawer.setColor(new Color(0.35f, 0.70f, 1.0f, 0.85f));
-        drawer.rectangle(midX - 220f, headerY - 14f, 90f, 28f, 1.5f);
-        smallFont.setColor(0.40f, 0.85f, 1.0f, 1.0f);
-        layout.setText(smallFont, diffText);
-        smallFont.draw(batch, diffText, midX - 220f + (90f - layout.width) / 2f, headerY + layout.height / 2f);
 
         // Timer
         headerFont.setColor(0.95f, 0.95f, 1.0f, 1.0f);
@@ -1016,26 +1049,17 @@ public class TargetingGame extends ApplicationAdapter {
         drawer.setColor(new Color(0.35f, 0.65f, 0.95f, 0.45f));
         drawer.line(cx + 35f, cy + cardH - 105f, cx + cardW - 35f, cy + cardH - 105f, 2f);
 
-        // Difficulty Selector Pills
-        float diffW = 85f;
-        float diffH = 34f;
-        float diffStartX = cx + (cardW - (diffW * 4 + 24f)) / 2f;
-        float diffY = cy + cardH - 155f;
-        SudokuEngine.Difficulty[] diffs = SudokuEngine.Difficulty.values();
-
-        for (int i = 0; i < diffs.length; i++) {
-            float dx = diffStartX + i * (diffW + 8f);
-            boolean isSel = (diffs[i] == selectedDifficulty);
-
-            drawer.setColor(isSel ? new Color(0.18f, 0.55f, 0.75f, 0.95f) : new Color(0.10f, 0.14f, 0.20f, 0.85f));
-            drawer.filledRectangle(dx, diffY, diffW, diffH);
-
-            drawer.setColor(isSel ? new Color(0.45f, 0.90f, 1.0f, 1.0f) : new Color(0.24f, 0.35f, 0.50f, 0.60f));
-            drawer.rectangle(dx, diffY, diffW, diffH, 1.8f);
-
-            smallFont.setColor(isSel ? Color.WHITE : new Color(0.70f, 0.80f, 0.90f, 0.85f));
-            layout.setText(smallFont, diffs[i].label);
-            smallFont.draw(batch, diffs[i].label, dx + (diffW - layout.width) / 2f, diffY + (diffH + layout.height) / 2f);
+        // Render Difficulty Buttons
+        for (UIElement btn : difficultyButtons) {
+            boolean isSel = btn.text.equals(selectedDifficulty.label);
+            if (isSel) {
+                btn.baseColor.set(0.18f, 0.55f, 0.75f, 0.95f);
+                btn.borderColor.set(0.45f, 0.90f, 1.0f, 1.0f);
+            } else {
+                btn.baseColor.set(0.10f, 0.14f, 0.20f, 0.85f);
+                btn.borderColor.set(0.24f, 0.35f, 0.50f, 0.60f);
+            }
+            renderButton(btn, smallFont);
         }
 
         // Render Menu Buttons
