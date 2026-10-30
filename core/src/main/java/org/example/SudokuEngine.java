@@ -11,10 +11,10 @@ import java.util.*;
 public class SudokuEngine {
 
     public enum Difficulty {
-        EASY("KOLAY", 36),
-        MEDIUM("ORTA", 46),
-        HARD("ZOR", 52),
-        EXPERT("UZMAN", 56);
+        EASY("EASY", 36),
+        MEDIUM("MEDIUM", 46),
+        HARD("HARD", 52),
+        EXPERT("EXPERT", 56);
 
         public final String label;
         public final int cluesToRemove;
