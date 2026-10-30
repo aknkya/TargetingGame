@@ -9,7 +9,7 @@ public class DesktopLauncher {
 
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setForegroundFPS(60);
-        config.setTitle("Sudoku Master - Modern Glass Edition");
+        config.setTitle("Sudoku Master - Paper Edition");
         config.setWindowedMode(1280, 720);
         config.useVsync(true);
 
