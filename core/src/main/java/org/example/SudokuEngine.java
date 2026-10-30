@@ -344,6 +344,31 @@ public class SudokuEngine {
         }
     }
 
+    public void restoreGame(Difficulty difficulty, int[][] savedBoard, int[][] savedInitial,
+                            int[][] savedSolution, boolean[][][] savedNotes, float savedTime, int savedMistakes) {
+        this.currentDifficulty = difficulty;
+        this.history.clear();
+        this.mistakes = savedMistakes;
+        this.elapsedTime = savedTime;
+        this.isCompleted = false;
+        this.isGameOver = (mistakes >= maxMistakes);
+
+        for (int r = 0; r < 9; r++) {
+            System.arraycopy(savedBoard[r], 0, this.board[r], 0, 9);
+            System.arraycopy(savedInitial[r], 0, this.initial[r], 0, 9);
+            System.arraycopy(savedSolution[r], 0, this.solution[r], 0, 9);
+            for (int c = 0; c < 9; c++) {
+                System.arraycopy(savedNotes[r][c], 0, this.notes[r][c], 0, 9);
+            }
+        }
+        updateConflicts();
+        checkVictory();
+    }
+
+    public float getElapsedTime() {
+        return elapsedTime;
+    }
+
     public String getFormattedTime() {
         int totalSec = (int) elapsedTime;
         int minutes = totalSec / 60;
