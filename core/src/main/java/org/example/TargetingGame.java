@@ -197,7 +197,7 @@ public class TargetingGame extends ApplicationAdapter {
             param.magFilter = Texture.TextureFilter.Linear;
             param.characters = FreeTypeFontGenerator.DEFAULT_CHARS
                     + "abcçdefgğhıijklmnoöprsştuüvyzABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"
-                    + "▶ℹ✖✔↺⌂⏸🔊🔇•|[]:;/-+*()!?#%&~<>★⚙✎⌫💡⏱⚠";
+                    + "0123456789.,:;!?()[]{}/+-*=%&'\"_# ";
 
             param.size = 38;
             titleFont = gen.generateFont(param);
@@ -293,7 +293,7 @@ public class TargetingGame extends ApplicationAdapter {
             fdef.shape = box;
             fdef.density = 1.0f;
             fdef.friction = 0.5f;
-            fdef.restitution = 0.65f; // bouncy confetti
+            fdef.restitution = 0.65f;
             body.createFixture(fdef);
             box.dispose();
 
@@ -322,7 +322,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // PLAY
         menuButtons.add(new UIElement(
-                menuX, startY, menuW, menuH, "▶  OYNA (PLAY)",
+                menuX, startY, menuW, menuH, "OYNA (PLAY)",
                 new Color(0.10f, 0.32f, 0.30f, 0.90f), new Color(0.14f, 0.70f, 0.56f, 0.95f),
                 new Color(0.25f, 0.85f, 0.70f, 0.70f), new Color(0.40f, 1.0f, 0.85f, 1.0f),
                 () -> {
@@ -333,7 +333,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // HOW TO PLAY
         menuButtons.add(new UIElement(
-                menuX, startY - gap, menuW, menuH, "ℹ  NASIL OYNANIR?",
+                menuX, startY - gap, menuW, menuH, "NASIL OYNANIR?",
                 new Color(0.11f, 0.16f, 0.24f, 0.90f), new Color(0.18f, 0.32f, 0.48f, 0.95f),
                 new Color(0.28f, 0.52f, 0.78f, 0.65f), new Color(0.45f, 0.75f, 1.0f, 0.95f),
                 () -> state = GameState.HOW_TO_PLAY
@@ -341,7 +341,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // AUDIO TOGGLE
         menuButtons.add(new UIElement(
-                menuX, startY - gap * 2, menuW, menuH, sfx.isSoundEnabled() ? "🔊  SES: AÇIK" : "🔇  SES: KAPALI",
+                menuX, startY - gap * 2, menuW, menuH, sfx.isSoundEnabled() ? "SES: AÇIK" : "SES: KAPALI",
                 new Color(0.11f, 0.16f, 0.24f, 0.90f), new Color(0.22f, 0.30f, 0.44f, 0.95f),
                 new Color(0.35f, 0.45f, 0.62f, 0.65f), new Color(0.55f, 0.70f, 0.95f, 0.95f),
                 this::toggleAudio
@@ -349,7 +349,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // QUIT
         menuButtons.add(new UIElement(
-                menuX, startY - gap * 3, menuW, menuH, "✖  ÇIKIŞ (QUIT)",
+                menuX, startY - gap * 3, menuW, menuH, "ÇIKIŞ (QUIT)",
                 new Color(0.18f, 0.10f, 0.12f, 0.85f), new Color(0.65f, 0.16f, 0.22f, 0.92f),
                 new Color(0.60f, 0.22f, 0.28f, 0.60f), new Color(1.0f, 0.35f, 0.45f, 0.95f),
                 () -> Gdx.app.exit()
@@ -357,14 +357,14 @@ public class TargetingGame extends ApplicationAdapter {
 
         // --- 2. IN-GAME TOP HUD PILLS ---
         inGameButtons.add(new UIElement(
-                25f, SCREEN_HEIGHT - 54f, 120f, 38f, "⏸  MENÜ",
+                25f, SCREEN_HEIGHT - 54f, 120f, 38f, "MENÜ",
                 new Color(0.08f, 0.12f, 0.18f, 0.85f), new Color(0.18f, 0.30f, 0.45f, 0.95f),
                 new Color(0.28f, 0.48f, 0.70f, 0.60f), new Color(0.40f, 0.75f, 1.0f, 0.90f),
                 () -> state = GameState.PAUSED
         ));
 
         inGameButtons.add(new UIElement(
-                SCREEN_WIDTH - 280f, SCREEN_HEIGHT - 54f, 120f, 38f, sfx.isSoundEnabled() ? "🔊 SES" : "🔇 SES",
+                SCREEN_WIDTH - 280f, SCREEN_HEIGHT - 54f, 120f, 38f, sfx.isSoundEnabled() ? "SES: AÇIK" : "SES: KAPALI",
                 new Color(0.08f, 0.12f, 0.18f, 0.85f), new Color(0.18f, 0.30f, 0.45f, 0.95f),
                 new Color(0.28f, 0.48f, 0.70f, 0.60f), new Color(0.40f, 0.75f, 1.0f, 0.90f),
                 this::toggleAudio
@@ -386,7 +386,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Undo
         inGameButtons.add(new UIElement(
-                panelX, actY, actBtnW, actBtnH, "↺ Geri Al",
+                panelX, actY, actBtnW, actBtnH, "GERİ AL",
                 new Color(0.10f, 0.14f, 0.22f, 0.85f), new Color(0.18f, 0.28f, 0.44f, 0.95f),
                 new Color(0.28f, 0.45f, 0.68f, 0.60f), new Color(0.45f, 0.75f, 1.0f, 0.95f),
                 () -> {
@@ -396,7 +396,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Pencil / Note Mode Toggle
         inGameButtons.add(new UIElement(
-                panelX + (actBtnW + actGap), actY, actBtnW, actBtnH, "✎ Not",
+                panelX + (actBtnW + actGap), actY, actBtnW, actBtnH, "NOT MODU",
                 new Color(0.10f, 0.14f, 0.22f, 0.85f), new Color(0.28f, 0.45f, 0.68f, 0.95f),
                 new Color(0.28f, 0.45f, 0.68f, 0.60f), new Color(1.0f, 0.75f, 0.25f, 1.0f),
                 () -> {
@@ -407,7 +407,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Erase
         inGameButtons.add(new UIElement(
-                panelX + (actBtnW + actGap) * 2, actY, actBtnW, actBtnH, "⌫ Sil",
+                panelX + (actBtnW + actGap) * 2, actY, actBtnW, actBtnH, "SİL",
                 new Color(0.16f, 0.11f, 0.14f, 0.85f), new Color(0.45f, 0.18f, 0.25f, 0.95f),
                 new Color(0.55f, 0.25f, 0.35f, 0.60f), new Color(0.95f, 0.40f, 0.55f, 0.95f),
                 () -> {
@@ -417,7 +417,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Hint
         inGameButtons.add(new UIElement(
-                panelX + (actBtnW + actGap) * 3, actY, actBtnW, actBtnH, "💡 İpucu",
+                panelX + (actBtnW + actGap) * 3, actY, actBtnW, actBtnH, "İPUCU",
                 new Color(0.20f, 0.18f, 0.10f, 0.85f), new Color(0.55f, 0.45f, 0.14f, 0.95f),
                 new Color(0.70f, 0.55f, 0.20f, 0.60f), new Color(1.0f, 0.82f, 0.25f, 0.95f),
                 () -> {
@@ -449,7 +449,7 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Modal Close Button
         modalButtons.add(new UIElement(
-                (SCREEN_WIDTH - 240f) / 2f, 175f, 240f, 46f, "✔  ANLADIM, OYNA!",
+                (SCREEN_WIDTH - 240f) / 2f, 175f, 240f, 46f, "ANLADIM, OYNA!",
                 new Color(0.10f, 0.32f, 0.28f, 0.92f), new Color(0.14f, 0.70f, 0.56f, 0.96f),
                 new Color(0.25f, 0.85f, 0.70f, 0.75f), new Color(0.45f, 1.0f, 0.88f, 1.0f),
                 () -> {
@@ -487,9 +487,9 @@ public class TargetingGame extends ApplicationAdapter {
 
     private void toggleAudio() {
         sfx.toggleSound();
-        String lbl = sfx.isSoundEnabled() ? "🔊  SES: AÇIK" : "🔇  SES: KAPALI";
+        String lbl = sfx.isSoundEnabled() ? "SES: AÇIK" : "SES: KAPALI";
         if (menuButtons.size() > 2) menuButtons.get(2).text = lbl;
-        if (inGameButtons.size() > 1) inGameButtons.get(1).text = sfx.isSoundEnabled() ? "🔊 SES" : "🔇 SES";
+        if (inGameButtons.size() > 1) inGameButtons.get(1).text = sfx.isSoundEnabled() ? "SES: AÇIK" : "SES: KAPALI";
     }
 
     private void setupInput() {
@@ -791,12 +791,12 @@ public class TargetingGame extends ApplicationAdapter {
 
         // Timer
         headerFont.setColor(0.95f, 0.95f, 1.0f, 1.0f);
-        String timeStr = "⏱ " + sudoku.getFormattedTime();
+        String timeStr = "Süre: " + sudoku.getFormattedTime();
         layout.setText(headerFont, timeStr);
         headerFont.draw(batch, timeStr, midX - layout.width / 2f, headerY + layout.height / 2f);
 
         // Mistakes Pill
-        String mistakeStr = "⚠ Hata: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
+        String mistakeStr = "Hata: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
         drawer.setColor(new Color(0.24f, 0.12f, 0.14f, 0.85f));
         drawer.filledRectangle(midX + 130f, headerY - 14f, 110f, 28f);
         drawer.setColor(sudoku.getMistakes() > 0 ? new Color(1.0f, 0.35f, 0.40f, 0.85f) : new Color(0.45f, 0.60f, 0.75f, 0.60f));
@@ -932,7 +932,7 @@ public class TargetingGame extends ApplicationAdapter {
             renderButton(btn, digitFont);
 
             // Remaining count badge
-            String remText = remaining > 0 ? remaining + " kaldı" : "✔ bitti";
+            String remText = remaining > 0 ? remaining + " kaldı" : "Bitti";
             smallFont.setColor(remaining > 0 ? new Color(0.60f, 0.75f, 0.90f, 0.85f) : new Color(0.35f, 0.85f, 0.55f, 0.90f));
             layout.setText(smallFont, remText);
             smallFont.draw(batch, remText, btn.x + (btn.width - layout.width) / 2f, btn.y + 22f);
@@ -959,6 +959,13 @@ public class TargetingGame extends ApplicationAdapter {
 
         drawer.setColor(border);
         drawer.rectangle(btn.x, dy, btn.width, btn.height, 2f);
+
+        // Futuristic accent pill on left side when hovered
+        if (btn.hoverAnim > 0.05f) {
+            drawer.setColor(border);
+            float pillH = (btn.height - 14f) * btn.hoverAnim;
+            drawer.filledRectangle(btn.x + 4f, dy + (btn.height - pillH) / 2f, 4f, pillH);
+        }
 
         // Center Text
         font.setColor(0.95f, 0.97f, 1.0f, 1.0f);
@@ -1058,10 +1065,10 @@ public class TargetingGame extends ApplicationAdapter {
         float row1 = cy + modalH - 180f;
         float row2 = row1 - 105f;
 
-        renderGuideCard(col1, row1, cardW, cardH, "▶ 9x9 SUDOKU KURALLARI", "Her satır, sütun ve 3x3 kutuda", "1-9 arası rakamlar tam 1 kez geçmelidir.");
-        renderGuideCard(col2, row1, cardW, cardH, "✎ NOT MODU (PENCIL)", "Hücrelere mini aday rakamlar yazın.", "Boşluk veya [N] ile açıp kapatın.");
-        renderGuideCard(col1, row2, cardW, cardH, "💡 İPUCU & GERİ AL", "Tıkandığınızda ipucu butonunu kullanın.", "[Z] ile hatalı hamleleri geri alın.");
-        renderGuideCard(col2, row2, cardW, cardH, "⌨ KLAVYE KONTROLLERİ", "Ok tuşları ile gezinin, 1-9 ile yazın.", "[Backspace] ile silin, [ESC] ile duraklatın.");
+        renderGuideCard(col1, row1, cardW, cardH, "9x9 SUDOKU KURALLARI", "Her satır, sütun ve 3x3 kutuda", "1-9 arası rakamlar tam 1 kez geçmelidir.");
+        renderGuideCard(col2, row1, cardW, cardH, "NOT MODU (PENCIL)", "Hücrelere mini aday rakamlar yazın.", "Boşluk veya [N] ile açıp kapatın.");
+        renderGuideCard(col1, row2, cardW, cardH, "İPUCU & GERİ AL", "Tıkandığınızda ipucu butonunu kullanın.", "[Z] ile hatalı hamleleri geri alın.");
+        renderGuideCard(col2, row2, cardW, cardH, "KLAVYE KONTROLLERİ", "Ok tuşları ile gezinin, 1-9 ile yazın.", "[Backspace] ile silin, [ESC] ile duraklatın.");
 
         renderButton(modalButtons.get(0), buttonFont);
     }
@@ -1103,9 +1110,9 @@ public class TargetingGame extends ApplicationAdapter {
         float btnH = 50f;
         float bx = cx + 40f;
 
-        drawSimpleModalBtn(bx, cy + 180f, btnW, btnH, "▶  DEVAM ET", new Color(0.14f, 0.65f, 0.52f, 0.95f));
-        drawSimpleModalBtn(bx, cy + 115f, btnW, btnH, "+  YENİ OYUN", new Color(0.18f, 0.35f, 0.52f, 0.95f));
-        drawSimpleModalBtn(bx, cy + 50f, btnW, btnH, "⌂  ANA MENÜYE DÖN", new Color(0.55f, 0.20f, 0.35f, 0.92f));
+        drawSimpleModalBtn(bx, cy + 180f, btnW, btnH, "DEVAM ET", new Color(0.14f, 0.65f, 0.52f, 0.95f));
+        drawSimpleModalBtn(bx, cy + 115f, btnW, btnH, "+ YENİ OYUN", new Color(0.18f, 0.35f, 0.52f, 0.95f));
+        drawSimpleModalBtn(bx, cy + 50f, btnW, btnH, "ANA MENÜYE DÖN", new Color(0.55f, 0.20f, 0.35f, 0.92f));
     }
 
     private void renderVictoryModal() {
@@ -1123,17 +1130,17 @@ public class TargetingGame extends ApplicationAdapter {
         drawer.rectangle(cx, cy, cardW, cardH, 3.0f);
 
         titleFont.setColor(0.25f, 1.0f, 0.65f, 1.0f);
-        layout.setText(titleFont, "★ TEBRİKLER! ★");
-        titleFont.draw(batch, "★ TEBRİKLER! ★", cx + (cardW - layout.width) / 2f, cy + cardH - 35f);
+        layout.setText(titleFont, "TEBRİKLER!");
+        titleFont.draw(batch, "TEBRİKLER!", cx + (cardW - layout.width) / 2f, cy + cardH - 35f);
 
         headerFont.setColor(Color.WHITE);
         layout.setText(headerFont, "SUDOKU ÇÖZÜLDÜ!");
         headerFont.draw(batch, "SUDOKU ÇÖZÜLDÜ!", cx + (cardW - layout.width) / 2f, cy + cardH - 85f);
 
         // Stats
-        String timeInfo = "⏱ Tamamlama Süresi: " + sudoku.getFormattedTime();
-        String diffInfo = "🎯 Zorluk: " + sudoku.getDifficulty().label;
-        String mistInfo = "⚠ Hatalar: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
+        String timeInfo = "Tamamlama Süresi: " + sudoku.getFormattedTime();
+        String diffInfo = "Zorluk: " + sudoku.getDifficulty().label;
+        String mistInfo = "Hatalar: " + sudoku.getMistakes() + "/" + sudoku.getMaxMistakes();
 
         buttonFont.setColor(0.85f, 0.92f, 1.0f, 1.0f);
         layout.setText(buttonFont, timeInfo);
@@ -1143,7 +1150,7 @@ public class TargetingGame extends ApplicationAdapter {
         layout.setText(buttonFont, mistInfo);
         buttonFont.draw(batch, mistInfo, cx + (cardW - layout.width) / 2f, cy + 150f);
 
-        drawSimpleModalBtn((SCREEN_WIDTH - 240f) / 2f, 200f - 120f, 240f, 48f, "✔ YENİ OYUN BAŞLAT", new Color(0.14f, 0.70f, 0.56f, 0.95f));
+        drawSimpleModalBtn((SCREEN_WIDTH - 240f) / 2f, 200f - 120f, 240f, 48f, "YENİ OYUN BAŞLAT", new Color(0.14f, 0.70f, 0.56f, 0.95f));
     }
 
     private void renderGameOverModal() {
@@ -1169,7 +1176,7 @@ public class TargetingGame extends ApplicationAdapter {
         layout.setText(headerFont, info);
         headerFont.draw(batch, info, cx + (cardW - layout.width) / 2f, cy + cardH - 95f);
 
-        drawSimpleModalBtn((SCREEN_WIDTH - 240f) / 2f, 200f - 70f, 240f, 48f, "↺ YENİDEN BAŞLA", new Color(0.70f, 0.20f, 0.30f, 0.95f));
+        drawSimpleModalBtn((SCREEN_WIDTH - 240f) / 2f, 200f - 70f, 240f, 48f, "YENİDEN BAŞLA", new Color(0.70f, 0.20f, 0.30f, 0.95f));
     }
 
     private void drawSimpleModalBtn(float x, float y, float w, float h, String text, Color col) {
